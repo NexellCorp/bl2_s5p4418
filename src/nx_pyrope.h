@@ -1,24 +1,21 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Sangjong, Han <hans@nexell.co.kr>
+ * Copyright (C) 2016  Nexell Co., Ltd. All Rights Reserved.
+ * Nexell Co. Proprietary & Confidential
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Nexell informs that this code and information is provided "as is" base
+ * and without warranty of any kind, either expressed or implied, including
+ * but not limited to the implied warranties of merchantability and/or
+ * fitness for a particular puporse.
+ * 
+ * Module	:
+ * File		:
+ * Description	:
+ * Author	: Hans
+ * History	: 2017.02.28 new release
  */
 #ifndef NX_ARM_H
 #define NX_ARM_H
 
-#include "cfgBootDefine.h"
 
 //; Standard definitions of mode bits and interrupt (I & F) flags in PSRs
 
@@ -78,7 +75,6 @@
 #define GPIO_GROUP_E	4
 
 #define POLY 0xEDB88320L
-//#define POLY 0x04C11DB7L	//Reverse
 
 #define SUSPEND_SIGNATURE	(0x50575200)	/* PWR (ASCII) */
 #define USBREBOOT_SIGNATURE	(0x85836666)

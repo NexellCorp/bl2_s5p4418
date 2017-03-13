@@ -1,19 +1,17 @@
- # Copyright (C) 2016  Nexell Co., Ltd.
- # Author: Sangjong, Han <hans@nexell.co.kr>
- #
- # This program is free software; you can redistribute it and/or
- # modify it under the terms of the GNU General Public License
- #
- # as published by the Free Software Foundation; either version 2
- # of the License, or (at your option) any later version.
- #
- # This program is distributed in the hope that it will be useful,
- # but WITHOUT ANY WARRANTY; without even the implied warranty of
- # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- # GNU General Public License for more details.
- #
- # You should have received a copy of the GNU General Public License
- # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright (C) 2016  Nexell Co., Ltd. All Rights Reserved.
+# Nexell Co. Proprietary & Confidential
+#
+# Nexell informs that this code and information is provided "as is" base
+# and without warranty of any kind, either expressed or implied, including
+# but not limited to the implied warranties of merchantability and/or
+# fitness for a particular puporse.
+#
+#	Module		:
+#	File		:
+#	Description	:
+#	Author		: Hans
+#	History		: 2017.02.28 new release
 
 include config.mak
 
@@ -26,13 +24,12 @@ LDFLAGS		=	-Bstatic						\
 			-Wl,--build-id=none					\
 			-nostdlib
 
-SYS_OBJS	+=	startup.o armv7_libs.o bl2.o	\
-			resetcon.o GPIO.o debug.o util.o CRC32.o	\
+SYS_OBJS	+=	startup.o armv7_libs.o bl2.o		\
+			resetcon.o GPIO.o debug.o util.o	\
 			buildinfo.o printf.o util_arm.o
 
 
 SYS_OBJS	+=	CRYPTO.o
-#SYS_OBJS	+=	nx_tieoff.o
 
 SYS_OBJS	+=	sha256.o rsa_verify_pss.o bignum.o
 
@@ -50,10 +47,7 @@ endif
 
 SYS_OBJS_LIST	=	$(addprefix $(DIR_OBJOUTPUT)/,$(SYS_OBJS))
 
-SYS_INCLUDES	=	-I src				\
-			-I src/services			\
-			-I prototype/base 		\
-			-I prototype/module
+SYS_INCLUDES	=	-I src
 
 ################################################################################
 $(DIR_OBJOUTPUT)/%.o: src/%.c
@@ -74,9 +68,6 @@ ifeq ($(OS),Windows_NT)
 	@if not exist $(DIR_TARGETOUTPUT)		\
 		@$(MKDIR) $(DIR_TARGETOUTPUT)
 else
-#	@if [ ! -L prototype ] ; then			\
-#		ln -s ../../../prototype/s5p4418/ prototype ; \
-	fi
 	@if	[ ! -e $(DIR_OBJOUTPUT) ]; then 	\
 		$(MKDIR) $(DIR_OBJOUTPUT);		\
 	fi;
@@ -112,9 +103,6 @@ ifeq ($(OS),Windows_NT)
 	@if exist $(DIR_TARGETOUTPUT)			\
 		@$(RMDIR) $(DIR_TARGETOUTPUT)
 else
-	@if [ -L prototype ] ; then			\
-		$(RM) prototype ;			\
-	fi
 	@if	[ -e $(DIR_OBJOUTPUT) ]; then 		\
 		$(RMDIR) $(DIR_OBJOUTPUT);		\
 	fi;

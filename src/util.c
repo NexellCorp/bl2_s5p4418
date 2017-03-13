@@ -1,31 +1,32 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Sangjong, Han <hans@nexell.co.kr>
+ * Copyright (C) 2016  Nexell Co., Ltd. All Rights Reserved.
+ * Nexell Co. Proprietary & Confidential
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Nexell informs that this code and information is provided "as is" base
+ * and without warranty of any kind, either expressed or implied, including
+ * but not limited to the implied warranties of merchantability and/or
+ * fitness for a particular puporse.
+ * This code is not allowed to redistribute without permission or
+ * open to the public.
+ * 
+ * Module	:
+ * File		:
+ * Description	:
+ * Author	: Hans
+ * History	: 2017.02.28 new release
  */
-#include <nx_type.h>
-#include "sysheader.h"
+#include "nx_chip.h"
+#include "nx_type.h"
+#include "nx_clkpwr.h"
+#include "printf.h"
 
-#define PLL_P   18
-#define PLL_M   8
-#define PLL_S   0
-#define PLL_K   16
-U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber)
+static volatile struct NX_CLKPWR_RegisterSet *const pReg_ClkPwr =
+	(struct NX_CLKPWR_RegisterSet *const)PHY_BASEADDR_CLKPWR_MODULE;
+
+u32 NX_CLKPWR_GetPLLFrequency(u32 PllNumber)
 {
-	U32 regvalue, regvalue1, nP, nM, nS, nK;
-	U32 temp = 0;
+	u32 regvalue, regvalue1, nP, nM, nS, nK;
+	u32 temp = 0;
 
 	regvalue = pReg_ClkPwr->PLLSETREG[PllNumber];
 	regvalue1 = pReg_ClkPwr->PLLSETREG_SSCG[PllNumber];
@@ -34,9 +35,8 @@ U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber)
 	nS = (regvalue >> PLL_S) & 0xFF;
 	nK = (regvalue1 >> PLL_K) & 0xFFFF;
 
-	if ((PllNumber > 1) && nK) {
+	if ((PllNumber >= 2) && nK)
 		temp = (((((nK * 1000) / 65536) * 24000) / nP) >> nS);
-	}
 
 	temp = ((((nM * 24000) / nP) >> nS) * 1000) + temp;
 	return temp;
@@ -52,6 +52,7 @@ void *memcpy(void *dest, const void *src, size_t n)
 
 	return dest;
 }
+
 void *memset(void *str, int c, size_t n)
 {
 	char *pdata = str;
@@ -59,6 +60,7 @@ void *memset(void *str, int c, size_t n)
 		*pdata++ = c;
 	return str;
 }
+
 int memcmp(const void* s1, const void* s2, size_t n)
 {
 	const char *src1 = s1, *src2 = s2;

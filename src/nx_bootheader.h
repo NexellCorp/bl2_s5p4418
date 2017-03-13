@@ -17,24 +17,6 @@
 #ifndef __NX_BOOTHEADER_H__
 #define __NX_BOOTHEADER_H__
 
-#if 0
-#define HEADER_ID			\
-	((((uint32_t)'N')<< 0) |	\
-	 (((uint32_t)'S')<< 8) |	\
-	 (((uint32_t)'I')<<16) |	\
-	 (((uint32_t)'H')<<24))
-
-
-enum	BOOT_FROM {
-	BOOT_FROM_USB   = 0UL,
-	BOOT_FROM_SPI   = 1UL,
-	BOOT_FROM_NAND  = 2UL,
-	BOOT_FROM_SDMMC = 3UL,
-	BOOT_FROM_SDFS  = 4UL,
-	BOOT_FROM_UART  = 5UL
-};
-#endif
-
 struct nx_nandbootinfo {
 	uint64_t deviceaddr;
 

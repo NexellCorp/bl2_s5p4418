@@ -1,30 +1,26 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Sangjong, Han <hans@nexell.co.kr>
+ * Copyright (C) 2016  Nexell Co., Ltd. All Rights Reserved.
+ * Nexell Co. Proprietary & Confidential
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Nexell informs that this code and information is provided "as is" base
+ * and without warranty of any kind, either expressed or implied, including
+ * but not limited to the implied warranties of merchantability and/or
+ * fitness for a particular puporse.
+ * 
+ * Module	:
+ * File		:
+ * Description	:
+ * Author	: Hans
+ * History	: 2017.02.28 new release
  */
 #ifndef __NX_SECONDBOOT_H__
 #define __NX_SECONDBOOT_H__
 
-#include "cfgBootDefine.h"
 
-
-#define HEADER_ID	((((U32)'N') <<  0) |	\
-			 (((U32)'S') <<  8) |	\
-			 (((U32)'I') << 16) |	\
-			 (((U32)'H') << 24))
+#define HEADER_ID	((((u32)'N') <<  0) |	\
+			 (((u32)'S') <<  8) |	\
+			 (((u32)'I') << 16) |	\
+			 (((u32)'H') << 24))
 
 
 enum
@@ -39,95 +35,95 @@ enum
 
 struct NX_NANDBootInfo
 {
-	U8  AddrStep;
-	U8  tCOS;
-	U8  tACC;
-	U8  tOCH;
+	u8  AddrStep;
+	u8  tCOS;
+	u8  tACC;
+	u8  tOCH;
 #if 0
-	U32 PageSize    :24;    // 1 byte unit
-	U32 LoadDevice  :8;
+	u32 PageSize    :24;    // 1 byte unit
+	u32 LoadDevice  :8;
 #else
-	U8  PageSize;           // 512bytes unit
-	U8  TIOffset;           // 3rd boot Image copy Offset. 1MB unit.
-	U8  CopyCount;          // 3rd boot image copy count
-	U8  LoadDevice;         // device chip select number
+	u8  PageSize;           // 512bytes unit
+	u8  TIOffset;           // 3rd boot Image copy Offset. 1MB unit.
+	u8  CopyCount;          // 3rd boot image copy count
+	u8  LoadDevice;         // device chip select number
 #endif
-	U32 CRC32;
+	u32 CRC32;
 };
 
 struct NX_SPIBootInfo
 {
-	U8  AddrStep;
-	U8  _Reserved0[2];
-	U8  PortNumber;
+	u8  AddrStep;
+	u8  _Reserved0[2];
+	u8  PortNumber;
 
-	U32 _Reserved1  : 24;
-	U32 LoadDevice  : 8;
+	u32 _Reserved1  : 24;
+	u32 LoadDevice  : 8;
 
-	U32 CRC32;
+	u32 CRC32;
 };
 
 struct NX_UARTBootInfo
 {
-	U32 _Reserved0;
+	u32 _Reserved0;
 
-	U32 _Reserved1  : 24;
-	U32 LoadDevice  : 8;
+	u32 _Reserved1  : 24;
+	u32 LoadDevice  : 8;
 
-	U32 CRC32;
+	u32 CRC32;
 };
 
 struct NX_SDMMCBootInfo
 {
 #if 1
-	U8  PortNumber;
-	U8  _Reserved0[3];
+	u8  PortNumber;
+	u8  _Reserved0[3];
 #else
-	U8  _Reserved0[3];
-	U8  PortNumber;
+	u8  _Reserved0[3];
+	u8  PortNumber;
 #endif
 
-	U32 _Reserved1  : 24;
-	U32 LoadDevice  : 8;
+	u32 _Reserved1  : 24;
+	u32 LoadDevice  : 8;
 
-	U32 CRC32;
+	u32 CRC32;
 };
 
 struct NX_DDR3DEV_DRVDSInfo
 {
-	U8  MR2_RTT_WR;
-	U8  MR1_ODS;
-	U8  MR1_RTT_Nom;
-	U8  _Reserved0;
+	u8  MR2_RTT_WR;
+	u8  MR1_ODS;
+	u8  MR1_RTT_Nom;
+	u8  _Reserved0;
 };
 
 struct NX_LPDDR3DEV_DRVDSInfo
 {
-	U8  MR3_DS      : 4;
-	U8  MR11_DQ_ODT : 2;
-	U8  MR11_PD_CON : 1;
-	U8  _Reserved0  : 1;
+	u8  MR3_DS      : 4;
+	u8  MR11_DQ_ODT : 2;
+	u8  MR11_PD_CON : 1;
+	u8  _Reserved0  : 1;
 
-	U8  _Reserved1;
-	U8  _Reserved2;
-	U8  _Reserved3;
+	u8  _Reserved1;
+	u8  _Reserved2;
+	u8  _Reserved3;
 };
 
 struct NX_DDRPHY_DRVDSInfo
 {
-	U8  DRVDS_Byte0;    // Data Slice 0
-	U8  DRVDS_Byte1;    // Data Slice 1
-	U8  DRVDS_Byte2;    // Data Slice 2
-	U8  DRVDS_Byte3;    // Data Slice 3
+	u8  DRVDS_Byte0;    // Data Slice 0
+	u8  DRVDS_Byte1;    // Data Slice 1
+	u8  DRVDS_Byte2;    // Data Slice 2
+	u8  DRVDS_Byte3;    // Data Slice 3
 
-	U8  DRVDS_CK;       // CK
-	U8  DRVDS_CKE;      // CKE
-	U8  DRVDS_CS;       // CS
-	U8  DRVDS_CA;       // CA[9:0], RAS, CAS, WEN, ODT[1:0], RESET, BANK[2:0]
+	u8  DRVDS_CK;       // CK
+	u8  DRVDS_CKE;      // CKE
+	u8  DRVDS_CS;       // CS
+	u8  DRVDS_CA;       // CA[9:0], RAS, CAS, WEN, ODT[1:0], RESET, BANK[2:0]
 
-	U8  ZQ_DDS;         // zq mode driver strength selection.
-	U8  ZQ_ODT;
-	U8  _Reserved0[2];
+	u8  ZQ_DDS;         // zq mode driver strength selection.
+	u8  ZQ_ODT;
+	u8  _Reserved0[2];
 };
 
 struct NX_SDFSBootInfo
@@ -146,52 +142,52 @@ union NX_DeviceBootInfo
 
 struct NX_DDRInitInfo
 {
-	U8  ChipNum;        // 0x88
-	U8  ChipRow;        // 0x89
-	U8  BusWidth;       // 0x8A
-	U8  ChipCol;        // 0x8B
+	u8  ChipNum;        // 0x88
+	u8  ChipRow;        // 0x89
+	u8  BusWidth;       // 0x8A
+	u8  ChipCol;        // 0x8B
 
-	U16 ChipMask;       // 0x8C
-	U16 ChipBase;       // 0x8E
+	u16 ChipMask;       // 0x8C
+	u16 ChipBase;       // 0x8E
 
 #if 0
-	U8  CWL;            // 0x90
-	U8  WL;             // 0x91
-	U8  RL;             // 0x92
-	U8  DDRRL;          // 0x93
+	u8  CWL;            // 0x90
+	u8  WL;             // 0x91
+	u8  RL;             // 0x92
+	u8  DDRRL;          // 0x93
 #else
-	U8  CWL;            // 0x90
-	U8  CL;             // 0x91
-	U8  MR1_AL;         // 0x92, MR2_RLWL (LPDDR3)
-	U8  MR0_WR;         // 0x93, MR1_nWR (LPDDR3)
+	u8  CWL;            // 0x90
+	u8  CL;             // 0x91
+	u8  MR1_AL;         // 0x92, MR2_RLWL (LPDDR3)
+	u8  MR0_WR;         // 0x93, MR1_nWR (LPDDR3)
 #endif
 
-	U32 READDELAY;      // 0x94
-	U32 WRITEDELAY;     // 0x98
+	u32 READDELAY;      // 0x94
+	u32 WRITEDELAY;     // 0x98
 
-	U32 TIMINGPZQ;      // 0x9C
-	U32 TIMINGAREF;     // 0xA0
-	U32 TIMINGROW;      // 0xA4
-	U32 TIMINGDATA;     // 0xA8
-	U32 TIMINGPOWER;    // 0xAC
+	u32 TIMINGPZQ;      // 0x9C
+	u32 TIMINGAREF;     // 0xA0
+	u32 TIMINGROW;      // 0xA4
+	u32 TIMINGDATA;     // 0xA8
+	u32 TIMINGPOWER;    // 0xAC
 };
 
 struct NX_SecondBootInfo
 {
-	U32 VECTOR[8];                  // 0x000 ~ 0x01C
-	U32 VECTOR_Rel[8];              // 0x020 ~ 0x03C
+	u32 VECTOR[8];                  // 0x000 ~ 0x01C
+	u32 VECTOR_Rel[8];              // 0x020 ~ 0x03C
 
-	U32 DEVICEADDR;                 // 0x040
+	u32 DEVICEADDR;                 // 0x040
 
-	U32 LOADSIZE;                   // 0x044
-	U32 LOADADDR;                   // 0x048
-	U32 LAUNCHADDR;                 // 0x04C
+	u32 LOADSIZE;                   // 0x044
+	u32 LOADADDR;                   // 0x048
+	u32 LAUNCHADDR;                 // 0x04C
 	union NX_DeviceBootInfo DBI;    // 0x050~0x058
 
-	U32 PLL[4];                     // 0x05C ~ 0x068
-	U32 PLLSPREAD[2];               // 0x06C ~ 0x070
+	u32 PLL[4];                     // 0x05C ~ 0x068
+	u32 PLLSPREAD[2];               // 0x06C ~ 0x070
 
-	U32 DVO[5];                     // 0x074 ~ 0x084
+	u32 DVO[5];                     // 0x074 ~ 0x084
 
 	struct NX_DDRInitInfo DII;      // 0x088 ~ 0x0AC
 
@@ -203,18 +199,18 @@ struct NX_SecondBootInfo
 #endif
 	struct NX_DDRPHY_DRVDSInfo      PHY_DSInfo;     // 0x0B4 ~ 0x0BC
 
-	U16 LvlTr_Mode;                 // 0x0C0 ~ 0x0C1
-	U16 FlyBy_Mode;                 // 0x0C2 ~ 0x0C3
+	u16 LvlTr_Mode;                 // 0x0C0 ~ 0x0C1
+	u16 FlyBy_Mode;                 // 0x0C2 ~ 0x0C3
 
-	U32 Stub[(0x1EC-0x0C4)/4+1];      // 0x0C4 ~ 0x1EC
+	u32 Stub[(0x1EC-0x0C4)/4+1];      // 0x0C4 ~ 0x1EC
 
-	U32 MemTestAddr;                // 0x1EC
-	U32 MemTestSize;                // 0x1F0
-	U32 MemTestTryCount;            // 0x1F4
+	u32 MemTestAddr;                // 0x1EC
+	u32 MemTestSize;                // 0x1F0
+	u32 MemTestTryCount;            // 0x1F4
 
-	U32 BuildInfo;                  // 0x1F8
+	u32 BuildInfo;                  // 0x1F8
 
-	U32 SIGNATURE;                  // 0x1FC    "NSIH"
+	u32 SIGNATURE;                  // 0x1FC    "NSIH"
 } __attribute__ ((packed,aligned(4)));
 
 // [0] : Use ICache
