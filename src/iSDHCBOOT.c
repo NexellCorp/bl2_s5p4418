@@ -1,23 +1,22 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Sangjong, Han <hans@nexell.co.kr>
+ * Copyright (C) 2016  Nexell Co., Ltd. All Rights Reserved.
+ * Nexell Co. Proprietary & Confidential
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Nexell informs that this code and information is provided "as is" base
+ * and without warranty of any kind, either expressed or implied, including
+ * but not limited to the implied warranties of merchantability and/or
+ * fitness for a particular puporse.
+ * 
+ * Module	:
+ * File		:
+ * Description	:
+ * Author	: Hans
+ * History	: 2017.02.28 new release
  */
 #include "sysheader.h"
 
-#include <nx_sdmmc.h>
+#include "nx_sdmmc.h"
+#include "nx_clkgen.h"
 #include "iSDHCBOOT.h"
 #include "nx_bootheader.h"
 
@@ -27,22 +26,22 @@
 #define dprintf(x, ...) {}
 #endif
 
-void ResetCon(U32 devicenum, CBOOL en);
-void GPIOSetAltFunction(U32 AltFunc);
-U32 NX_CLKPWR_GetPLLFrequency(U32 PllNumber);
+void ResetCon(u32 devicenum, cbool en);
+void GPIOSetAltFunction(u32 AltFunc);
+u32 NX_CLKPWR_GetPLLFrequency(u32 PllNumber);
 
 //------------------------------------------------------------------------------
-static struct NX_CLKGEN_RegisterSet *const pgSDClkGenReg[3] = {
+static volatile struct NX_CLKGEN_RegisterSet *const pgSDClkGenReg[3] = {
 	(struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN18_MODULE,
 	(struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN19_MODULE,
 	(struct NX_CLKGEN_RegisterSet *)PHY_BASEADDR_CLKGEN20_MODULE
 };
-static U32 const SDResetNum[3] = {
-	RESETINDEX_OF_SDMMC0_MODULE_i_nRST,
-	RESETINDEX_OF_SDMMC1_MODULE_i_nRST,
-	RESETINDEX_OF_SDMMC2_MODULE_i_nRST
+static u32 const SDResetNum[3] = {
+	RI_SDMMC0_MODULE_i_nRST,
+	RI_SDMMC1_MODULE_i_nRST,
+	RI_SDMMC2_MODULE_i_nRST
 };
-struct NX_SDMMC_RegisterSet *const pgSDXCReg[3] = {
+static volatile struct NX_SDMMC_RegisterSet *const pgSDXCReg[3] = {
 	(struct NX_SDMMC_RegisterSet *)PHY_BASEADDR_SDMMC0_MODULE,
 	(struct NX_SDMMC_RegisterSet *)PHY_BASEADDR_SDMMC1_MODULE,
 	(struct NX_SDMMC_RegisterSet *)PHY_BASEADDR_SDMMC2_MODULE
@@ -51,17 +50,17 @@ struct NX_SDMMC_RegisterSet *const pgSDXCReg[3] = {
 //------------------------------------------------------------------------------
 #if 1
 typedef struct {
-	U32 nPllNum;
-	U32 nFreqHz;
-	U32 nClkDiv;
-	U32 nClkGenDiv;
+	u32 nPllNum;
+	u32 nFreqHz;
+	u32 nClkDiv;
+	u32 nClkGenDiv;
 } NX_CLKINFO_SDMMC;
 
-CBOOL   NX_SDMMC_GetClkParam( NX_CLKINFO_SDMMC *pClkInfo )
+cbool   NX_SDMMC_GetClkParam( NX_CLKINFO_SDMMC *pClkInfo )
 {
-	U32 srcFreq;
-	U32 nRetry = 1, nTemp = 0;
-	CBOOL   fRet = CFALSE;
+	u32 srcFreq;
+	u32 nRetry = 1, nTemp = 0;
+	cbool   fRet = CFALSE;
 
 	srcFreq = NX_CLKPWR_GetPLLFrequency(pClkInfo->nPllNum);
 
@@ -94,20 +93,16 @@ exit_getparam:
 }
 #endif
 
-//------------------------------------------------------------------------------
-//static CBOOL	NX_SDMMC_SetClock(SDXCBOOTSTATUS * pSDXCBootStatus,
-//				CBOOL enb,
-//				U32 divider)
-static CBOOL	NX_SDMMC_SetClock(SDXCBOOTSTATUS * pSDXCBootStatus,
-				CBOOL enb, U32 nFreq)
+static cbool	NX_SDMMC_SetClock(SDXCBOOTSTATUS * pSDXCBootStatus,
+				cbool enb, u32 nFreq)
 {
-	volatile U32 timeout;
-	register struct NX_SDMMC_RegisterSet * const pSDXCReg =
+	volatile u32 timeout;
+	register volatile struct NX_SDMMC_RegisterSet * const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
-	register struct NX_CLKGEN_RegisterSet * const pSDClkGenReg =
+	register volatile struct NX_CLKGEN_RegisterSet * const pSDClkGenReg =
 		pgSDClkGenReg[pSDXCBootStatus->SDPort];
 	NX_CLKINFO_SDMMC clkInfo;
-	CBOOL ret;
+	cbool ret;
 
 #if defined(VERBOSE)
 	dprintf("NX_SDMMC_SetClock : divider = %d\r\n", divider);
@@ -149,7 +144,7 @@ static CBOOL	NX_SDMMC_SetClock(SDXCBOOTSTATUS * pSDXCBootStatus,
 	pSDXCReg->CLKENA &= ~NX_SDXC_CLKENA_CLKENB;
 	pSDXCReg->CLKENA |= NX_SDXC_CLKENA_LOWPWR;	// low power mode & clock disable
 
-	pSDClkGenReg->CLKENB = NX_PCLKMODE_ALWAYS << 3 | NX_BCLKMODE_DYNAMIC << 0;
+	pSDClkGenReg->clkenb = NX_PCLKMODE_ALWAYS << 3 | NX_BCLKMODE_DYNAMIC << 0;
 #if 0
 	pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] & ~(0x7 << 2 | 0xFF << 5))
 				| (SDXC_CLKGENSRC << 2)	// set clock source
@@ -161,7 +156,7 @@ static CBOOL	NX_SDMMC_SetClock(SDXCBOOTSTATUS * pSDXCBootStatus,
 	clkInfo.nFreqHz = nFreq;
 	ret = NX_SDMMC_GetClkParam(&clkInfo);
 	if (ret == CTRUE) {
-		pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] &
+		pSDClkGenReg->clkgen[0] = (pSDClkGenReg->clkgen[0] &
 						~(0x7 << 2 | 0xFF << 5))
 			| (clkInfo.nPllNum << 2)		// set clock source
 			| ((clkInfo.nClkGenDiv - 1) << 5)	// set clock divisor
@@ -170,7 +165,7 @@ static CBOOL	NX_SDMMC_SetClock(SDXCBOOTSTATUS * pSDXCBootStatus,
 		pSDXCReg->CLKDIV = (clkInfo.nClkDiv >> 1);	//  2*n divider (0 : bypass)
 	}
 #endif
-	pSDClkGenReg->CLKENB |= 0x1UL << 2;		// clock generation enable
+	pSDClkGenReg->clkenb |= 0x1UL << 2;		// clock generation enable
 	pSDXCReg->CLKENA &= ~NX_SDXC_CLKENA_LOWPWR;	// normal power mode
 	//--------------------------------------------------------------------------
 	// 3. Program the clock divider as required.
@@ -242,14 +237,14 @@ repeat_7 :
 }
 
 //------------------------------------------------------------------------------
-static U32 NX_SDMMC_SendCommandInternal(
+static u32 NX_SDMMC_SendCommandInternal(
 		SDXCBOOTSTATUS *pSDXCBootStatus,
 		NX_SDMMC_COMMAND *pCommand)
 {
-	U32 cmd, flag;
-	U32 status = 0;
-	volatile U32 timeout;
-	register struct NX_SDMMC_RegisterSet *const pSDXCReg =
+	u32 cmd, flag;
+	u32 status = 0;
+	volatile u32 timeout;
+	register volatile struct NX_SDMMC_RegisterSet *const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
 
 	NX_ASSERT(CNULL != pCommand);
@@ -356,9 +351,9 @@ End:
 }
 
 //------------------------------------------------------------------------------
-static U32 NX_SDMMC_SendStatus(SDXCBOOTSTATUS *pSDXCBootStatus)
+static u32 NX_SDMMC_SendStatus(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
-	U32 status;
+	u32 status;
 	NX_SDMMC_COMMAND cmd;
 
 	cmd.cmdidx	= SEND_STATUS;
@@ -428,10 +423,10 @@ static U32 NX_SDMMC_SendStatus(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-static U32 NX_SDMMC_SendCommand(SDXCBOOTSTATUS *pSDXCBootStatus,
+static u32 NX_SDMMC_SendCommand(SDXCBOOTSTATUS *pSDXCBootStatus,
 		NX_SDMMC_COMMAND *pCommand)
 {
-	U32 status;
+	u32 status;
 
 	status = NX_SDMMC_SendCommandInternal(pSDXCBootStatus, pCommand);
 	if (NX_SDMMC_STATUS_NOERROR != status)
@@ -441,10 +436,10 @@ static U32 NX_SDMMC_SendCommand(SDXCBOOTSTATUS *pSDXCBootStatus,
 }
 
 //------------------------------------------------------------------------------
-static U32 NX_SDMMC_SendAppCommand(SDXCBOOTSTATUS *pSDXCBootStatus,
+static u32 NX_SDMMC_SendAppCommand(SDXCBOOTSTATUS *pSDXCBootStatus,
 		NX_SDMMC_COMMAND *pCommand)
 {
-	U32 status;
+	u32 status;
 	NX_SDMMC_COMMAND cmd;
 
 	cmd.cmdidx = APP_CMD;
@@ -462,13 +457,13 @@ static U32 NX_SDMMC_SendAppCommand(SDXCBOOTSTATUS *pSDXCBootStatus,
 }
 
 //------------------------------------------------------------------------------
-static CBOOL NX_SDMMC_IdentifyCard(SDXCBOOTSTATUS *pSDXCBootStatus)
+static cbool NX_SDMMC_IdentifyCard(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
-	S32 timeout;
-	U32 HCS, RCA;
+	s32 timeout;
+	u32 HCS, RCA;
 	NX_SDMMC_CARDTYPE CardType = NX_SDMMC_CARDTYPE_UNKNOWN;
 	NX_SDMMC_COMMAND cmd;
-	struct NX_SDMMC_RegisterSet *const pSDXCReg =
+	register volatile struct NX_SDMMC_RegisterSet *const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
 
 #if 0
@@ -662,9 +657,9 @@ static CBOOL NX_SDMMC_IdentifyCard(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-static CBOOL NX_SDMMC_SelectCard(SDXCBOOTSTATUS *pSDXCBootStatus)
+static cbool NX_SDMMC_SelectCard(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
-	U32 status;
+	u32 status;
 	NX_SDMMC_COMMAND cmd;
 
 	cmd.cmdidx = SELECT_CARD;
@@ -680,11 +675,11 @@ static CBOOL NX_SDMMC_SelectCard(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-static CBOOL NX_SDMMC_SetCardDetectPullUp(
+static cbool NX_SDMMC_SetCardDetectPullUp(
 		SDXCBOOTSTATUS *pSDXCBootStatus,
-		CBOOL bEnb)
+		cbool bEnb)
 {
-	U32 status;
+	u32 status;
 	NX_SDMMC_COMMAND cmd;
 
 	cmd.cmdidx = SET_CLR_CARD_DETECT;
@@ -700,11 +695,11 @@ static CBOOL NX_SDMMC_SetCardDetectPullUp(
 }
 
 //------------------------------------------------------------------------------
-static CBOOL NX_SDMMC_SetBusWidth(SDXCBOOTSTATUS *pSDXCBootStatus, U32 buswidth)
+static cbool NX_SDMMC_SetBusWidth(SDXCBOOTSTATUS *pSDXCBootStatus, u32 buswidth)
 {
-	U32 status;
+	u32 status;
 	NX_SDMMC_COMMAND cmd;
-	register struct NX_SDMMC_RegisterSet * const pSDXCReg =
+	register volatile struct NX_SDMMC_RegisterSet * const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
 
 	NX_ASSERT(buswidth == 1 || buswidth == 4);
@@ -741,12 +736,12 @@ static CBOOL NX_SDMMC_SetBusWidth(SDXCBOOTSTATUS *pSDXCBootStatus, U32 buswidth)
 }
 
 //------------------------------------------------------------------------------
-static CBOOL	NX_SDMMC_SetBlockLength(SDXCBOOTSTATUS * pSDXCBootStatus,
-					U32 blocklength )
+static cbool	NX_SDMMC_SetBlockLength(SDXCBOOTSTATUS * pSDXCBootStatus,
+					u32 blocklength )
 {
-	U32 status;
+	u32 status;
 	NX_SDMMC_COMMAND cmd;
-	register struct NX_SDMMC_RegisterSet * const pSDXCReg =
+	register volatile struct NX_SDMMC_RegisterSet * const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
 
 	cmd.cmdidx = SET_BLOCKLEN;
@@ -766,15 +761,15 @@ static CBOOL	NX_SDMMC_SetBlockLength(SDXCBOOTSTATUS * pSDXCBootStatus,
 }
 
 //------------------------------------------------------------------------------
-CBOOL NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
+cbool NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
-	register struct NX_SDMMC_RegisterSet *const pSDXCReg =
+	register volatile struct NX_SDMMC_RegisterSet *const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
-	register struct NX_CLKGEN_RegisterSet *const pSDClkGenReg =
+	register volatile struct NX_CLKGEN_RegisterSet *const pSDClkGenReg =
 		pgSDClkGenReg[pSDXCBootStatus->SDPort];
 #if 1
 	NX_CLKINFO_SDMMC clkInfo;
-	CBOOL ret;
+	cbool ret;
 
 	clkInfo.nPllNum = NX_CLKSRC_SDMMC;
 	clkInfo.nFreqHz = 25000000;
@@ -785,22 +780,22 @@ CBOOL NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 #endif
 
 	// CLKGEN
-	pSDClkGenReg->CLKENB = NX_PCLKMODE_ALWAYS << 3 |
+	pSDClkGenReg->clkenb = NX_PCLKMODE_ALWAYS << 3 |
 				NX_BCLKMODE_DYNAMIC << 0;
 #if 0
-	pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] &
+	pSDClkGenReg->clkgen[0] = (pSDClkGenReg->CLKGEN[0] &
 					~(0x7 << 2 | 0xFF << 5))
 			| (SDXC_CLKGENSRC << 2)		// set clock source
 			| ((SDXC_CLKGENDIV - 1) << 5)	// set clock divisor
 			| (0UL << 1);			// set clock invert
 #else
-	pSDClkGenReg->CLKGEN[0] = (pSDClkGenReg->CLKGEN[0] &
+	pSDClkGenReg->clkgen[0] = (pSDClkGenReg->clkgen[0] &
 					~(0x7 << 2 | 0xFF << 5))
 			| (clkInfo.nPllNum << 2)	// set clock source
 			| ((clkInfo.nClkGenDiv - 1) << 5)	// set clock divisor
 			| (0UL << 1);			// set clock invert
 #endif
-	pSDClkGenReg->CLKENB |= 0x1UL << 2; // clock generation enable
+	pSDClkGenReg->clkenb |= 0x1UL << 2; // clock generation enable
 
 	ResetCon(SDResetNum[pSDXCBootStatus->SDPort], CTRUE);  // reset on
 	ResetCon(SDResetNum[pSDXCBootStatus->SDPort], CFALSE); // reset negate
@@ -857,9 +852,9 @@ CBOOL NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-CBOOL NX_SDMMC_Terminate(SDXCBOOTSTATUS *pSDXCBootStatus)
+cbool NX_SDMMC_Terminate(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
-	register struct NX_SDMMC_RegisterSet *const pSDXCReg =
+	register volatile struct NX_SDMMC_RegisterSet *const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
 	// Clear All interrupts
 	pSDXCReg->RINTSTS = 0xFFFFFFFF;
@@ -873,7 +868,7 @@ CBOOL NX_SDMMC_Terminate(SDXCBOOTSTATUS *pSDXCBootStatus)
 				NX_SDXC_CTRL_CTRLRST));
 
 	// Disable CLKGEN
-	pgSDClkGenReg[pSDXCBootStatus->SDPort]->CLKENB = 0;
+	pgSDClkGenReg[pSDXCBootStatus->SDPort]->clkenb = 0;
 
 	ResetCon(SDResetNum[pSDXCBootStatus->SDPort], CTRUE); // reset on
 
@@ -881,7 +876,7 @@ CBOOL NX_SDMMC_Terminate(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-CBOOL NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // U32 option )
+cbool NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // u32 option )
 {
 	//----------------------------------------------------------------------
 	// card identification mode : Identify & Initialize
@@ -917,7 +912,7 @@ CBOOL NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // U32 option )
 }
 
 //------------------------------------------------------------------------------
-CBOOL NX_SDMMC_Close(SDXCBOOTSTATUS *pSDXCBootStatus)
+cbool NX_SDMMC_Close(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
 	//NX_SDMMC_SetClock(pSDXCBootStatus, CFALSE, SDXC_CLKGENDIV_400KHZ);
 	NX_SDMMC_SetClock(pSDXCBootStatus, CFALSE, 400000);
@@ -925,14 +920,14 @@ CBOOL NX_SDMMC_Close(SDXCBOOTSTATUS *pSDXCBootStatus)
 }
 
 //------------------------------------------------------------------------------
-static CBOOL NX_SDMMC_ReadSectorData(SDXCBOOTSTATUS *pSDXCBootStatus,
-		U32 numberOfSector, U32 *pdwBuffer)
+static cbool NX_SDMMC_ReadSectorData(SDXCBOOTSTATUS *pSDXCBootStatus,
+		u32 numberOfSector, u32 *pdwBuffer)
 {
-	U32		count;
-	register struct NX_SDMMC_RegisterSet * const pSDXCReg =
+	u32		count;
+	register volatile struct NX_SDMMC_RegisterSet * const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
 
-	NX_ASSERT(0 == ((U32)pdwBuffer & 3));
+	NX_ASSERT(0 == ((u32)pdwBuffer & 3));
 
 	count = numberOfSector * BLOCK_LENGTH;
 	NX_ASSERT(0 == (count % 32));
@@ -940,7 +935,7 @@ static CBOOL NX_SDMMC_ReadSectorData(SDXCBOOTSTATUS *pSDXCBootStatus,
 	while (0 < count) {
 		if ((pSDXCReg->RINTSTS & NX_SDXC_RINTSTS_RXDR) ||
 				(pSDXCReg->RINTSTS & NX_SDXC_RINTSTS_DTO)) {
-			U32 FSize, Timeout = NX_SDMMC_TIMEOUT;
+			u32 FSize, Timeout = NX_SDMMC_TIMEOUT;
 			while ((pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY) &&
 					Timeout--);
 			if (0 == Timeout)
@@ -1000,19 +995,19 @@ static CBOOL NX_SDMMC_ReadSectorData(SDXCBOOTSTATUS *pSDXCBootStatus,
 }
 
 //------------------------------------------------------------------------------
-CBOOL NX_SDMMC_ReadSectors(SDXCBOOTSTATUS *pSDXCBootStatus, U32 SectorNum,
-		U32 numberOfSector, U32 *pdwBuffer)
+cbool NX_SDMMC_ReadSectors(SDXCBOOTSTATUS *pSDXCBootStatus, u32 SectorNum,
+		u32 numberOfSector, u32 *pdwBuffer)
 {
-	CBOOL	result = CFALSE;
-	U32	status;
+	cbool	result = CFALSE;
+	u32	status;
 #if defined(NX_DEBUG)
-	U32	response;
+	u32	response;
 #endif
 	NX_SDMMC_COMMAND cmd;
-	register struct NX_SDMMC_RegisterSet *const pSDXCReg =
+	register volatile struct NX_SDMMC_RegisterSet *const pSDXCReg =
 		pgSDXCReg[pSDXCBootStatus->SDPort];
 
-	NX_ASSERT(0 == ((U32)pdwBuffer & 3));
+	NX_ASSERT(0 == ((u32)pdwBuffer & 3));
 
 	 // wait while data busy or data transfer busy
 	while (pSDXCReg->STATUS & (1 << 9 | 1 << 10));
@@ -1114,108 +1109,6 @@ End:
 	return result;
 }
 
-//------------------------------------------------------------------------------
-extern void Decrypt(U32 *SrcAddr, U32 *DestAddr, U32 Size, U8* key);
-#if 0
-static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus,
-		struct NX_SecondBootInfo *pTBI) // U32 option )
-{
-	CBOOL	result = CFALSE;
-	register struct NX_SDMMC_RegisterSet * const pSDXCReg =
-		pgSDXCReg[pSDXCBootStatus->SDPort];
-
-	if (CTRUE == NX_SDMMC_Open(pSDXCBootStatus)) {
-		dprintf("Cannot Detect SDMMC\r\n");
-	}
-	if (0 == (pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY)) {
-		dprintf("FIFO Reset!!!\r\n");
-		pSDXCReg->CTRL = NX_SDXC_CTRL_FIFORST;	// Reset the FIFO.
-		// Wait until the FIFO reset is completed.
-		while (pSDXCReg->CTRL & NX_SDXC_CTRL_FIFORST);
-	}
-	dprintf("Load from :0x%08X Sector\r\n",
-			pSBI->DEVICEADDR / BLOCK_LENGTH);
-
-#if 1
-	result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
-			pSBI->DEVICEADDR / BLOCK_LENGTH,
-			1, (U32 *)pTBI);
-#else
-	{
-		U32 i;
-		U8 *buff = 0x40100000;
-		result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
-				1, 32, (U32 *)buff);
-
-		for (i = 0; i < 16384;) {
-			U32 j;
-			dprintf("0x%08X ", &buff[i]);
-			for (j = 0; j < 16; j++) {
-				dprintf("%02X ", buff[i + j]);
-			}
-			DebugPutch(' ');
-			for (j = 0; j < 16; j++) {
-				if (buff[i + j] < 0x20 ||
-					buff[i + j] > 0x80)
-				{
-					DebugPutch('.');
-				} else {
-					DebugPutch(buff[i + j]);
-				}
-			}
-			DebugPutch('\r');
-			DebugPutch('\n');
-			i+= 16;
-		}
-	}
-#endif
-	if (result == CFALSE) {
-		dprintf("cannot read boot header! SDMMC boot failure\r\n");
-		return result;
-	}
-
-#ifdef SECURE_ON
-	if (pReg_ClkPwr->SYSRSTCONFIG & 1 << 14)
-		Decrypt((U32 *)pTBI, (U32 *)pTBI,
-				sizeof(struct NX_SecondBootInfo));
-#endif
-	if (pTBI->SIGNATURE != HEADER_ID) {
-		dprintf("0x%08X\r\n3rd boot Sinature is wrong!"
-				" SDMMC boot failure\r\n",
-				pTBI->SIGNATURE);
-		return CFALSE;
-	}
-
-	//		pTBI->LOADADDR = 0x40c00000;
-	//		pTBI->LOADSIZE = 0x00050000;
-	//		pTBI->LAUNCHADDR = 0x40c00000;
-	dprintf("Load Addr :0x%08X,  "
-		"Load Size :0x%08X,  "
-		"Launch Addr :0x%08X\r\n",
-			pTBI->LOADADDR,
-			pTBI->LOADSIZE,
-			pTBI->LAUNCHADDR);
-
-	result = NX_SDMMC_ReadSectors(pSDXCBootStatus,
-			pSBI->DEVICEADDR / BLOCK_LENGTH + 1,
-			(pTBI->LOADSIZE + BLOCK_LENGTH - 1) / BLOCK_LENGTH,
-			(U32 *)pTBI->LOADADDR );
-
-#ifdef SECURE_ON
-	if (pReg_ClkPwr->SYSRSTCONFIG & 1 << 14)
-		Decrypt((U32 *)pTBI->LOADADDR,
-			(U32 *)pTBI->LOADADDR,
-				pTBI->LOADSIZE);
-#endif
-
-	if (result == CFALSE) {
-		dprintf("Image Read Failure\r\n");
-	}
-
-	return result;
-}
-#endif
-
 /*
    sdmmc 0                   sdmmc 1                   sdmmc 2
    clk  a 29 1 gpio:0        clk  d 22 1 gpio:0        clk  c 18 2 gpio:1
@@ -1225,176 +1118,142 @@ static CBOOL SDMMCBOOT(SDXCBOOTSTATUS *pSDXCBootStatus,
    dat2 b  5 1 gpio:0        dat2 d 26 1 gpio:0        dat2 c 22 2 gpio:1
    dat3 b  7 1 gpio:0        dat3 d 27 1 gpio:0        dat3 c 23 2 gpio:1
  */
-void NX_SDPADSetALT(U32 PortNum)
+void NX_SDPADSetALT(u32 PortNum)
 {
 	if (PortNum == 0) {
-		struct NX_GPIO_RegisterSet *pGPA = pReg_GPIO[0];
-		struct NX_GPIO_RegisterSet *pGPB = pReg_GPIO[1];
-		register U32 *pGPIOARegA1 =
-			(U32 *)&pGPA->GPIOxALTFN[1];	// a 29, a 31
-		register U32 *pGPIOBRegA0 =
-			(U32 *)&pGPB->GPIOxALTFN[0];	// b 1, 3, 5, 7
+		volatile struct NX_GPIO_RegisterSet *pGPA = pReg_GPIO[0];
+		volatile struct NX_GPIO_RegisterSet *pGPB = pReg_GPIO[1];
+		register volatile u32 *pGPIOARegA1 =
+			(u32 *)&pGPA->GPIOxALTFN[1];	// a 29, a 31
+		register volatile u32 *pGPIOBRegA0 =
+			(u32 *)&pGPB->GPIOxALTFN[0];	// b 1, 3, 5, 7
 		*pGPIOARegA1 = (*pGPIOARegA1 & ~0xCC000000) | 0x44000000;	// all alt is 1
 		*pGPIOBRegA0 = (*pGPIOBRegA0 & ~0x0000CCCC) | 0x00004444;	// all alt is 1
-		pGPA->GPIOx_SLEW			&= ~(5 << 29);
-		pGPA->GPIOx_SLEW_DISABLE_DEFAULT	|=   5 << 29;
-		pGPA->GPIOx_DRV0			|=   5 << 29;
-		pGPA->GPIOx_DRV0_DISABLE_DEFAULT	|=   5 << 29;
-		pGPA->GPIOx_DRV1			|=   5 << 29;
-		pGPA->GPIOx_DRV1_DISABLE_DEFAULT	|=   5 << 29;
-		pGPA->GPIOx_PULLSEL			|=   5 << 29;
-		pGPA->GPIOx_PULLSEL_DISABLE_DEFAULT	|=   5 << 29;
-//		pGPA->GPIOx_PULLENB			|=   5 << 29;
-		pGPA->GPIOx_PULLENB			|=   4 << 29;		// clk is not pull-up.
-		pGPA->GPIOx_PULLENB_DISABLE_DEFAULT	|=   5 << 29;
+		pGPA->GPIOx_SLEW		&= ~(5 << 29);
+		pGPA->GPIOx_SLEW_DD		|=   5 << 29;
+		pGPA->GPIOx_DRV0		|=   5 << 29;
+		pGPA->GPIOx_DRV0_DD		|=   5 << 29;
+		pGPA->GPIOx_DRV1		|=   5 << 29;
+		pGPA->GPIOx_DRV1_DD		|=   5 << 29;
+		pGPA->GPIOx_PULLSEL		|=   5 << 29;
+		pGPA->GPIOx_PULLSEL_DD		|=   5 << 29;
+//		pGPA->GPIOx_PULLENB		|=   5 << 29;
+		pGPA->GPIOx_PULLENB		|=   4 << 29;		// clk is not pull-up.
+		pGPA->GPIOx_PULLENB_DD		|=   5 << 29;
 
-		pGPB->GPIOx_SLEW			&= ~(0x55 << 1);
-		pGPB->GPIOx_SLEW_DISABLE_DEFAULT	|=   0x55 << 1;
-		pGPB->GPIOx_DRV0			|=   0x55 << 1;
-		pGPB->GPIOx_DRV0_DISABLE_DEFAULT	|=   0x55 << 1;
-		pGPB->GPIOx_DRV1			|=   0x55 << 1;
-		pGPB->GPIOx_DRV1_DISABLE_DEFAULT	|=   0x55 << 1;
-		pGPB->GPIOx_PULLSEL			|=   0x55 << 1;
-		pGPB->GPIOx_PULLSEL_DISABLE_DEFAULT	|=   0x55 << 1;
-		pGPB->GPIOx_PULLENB			|=   0x55 << 1;
-		pGPB->GPIOx_PULLENB_DISABLE_DEFAULT	|=   0x55 << 1;
+		pGPB->GPIOx_SLEW		&= ~(0x55 << 1);
+		pGPB->GPIOx_SLEW_DD		|=   0x55 << 1;
+		pGPB->GPIOx_DRV0		|=   0x55 << 1;
+		pGPB->GPIOx_DRV0_DD		|=   0x55 << 1;
+		pGPB->GPIOx_DRV1		|=   0x55 << 1;
+		pGPB->GPIOx_DRV1_DD		|=   0x55 << 1;
+		pGPB->GPIOx_PULLSEL		|=   0x55 << 1;
+		pGPB->GPIOx_PULLSEL_DD		|=   0x55 << 1;
+		pGPB->GPIOx_PULLENB		|=   0x55 << 1;
+		pGPB->GPIOx_PULLENB_DD		|=   0x55 << 1;
 	} else if (PortNum == 1) {
-		struct NX_GPIO_RegisterSet *pGPD = pReg_GPIO[3];
-		register U32 *pGPIODRegA1 = (U32 *)&pGPD->GPIOxALTFN[1];
+		volatile struct NX_GPIO_RegisterSet *pGPD = pReg_GPIO[3];
+		register volatile u32 *pGPIODRegA1 = (u32 *)&pGPD->GPIOxALTFN[1];
 		// d 22, 23, 24, 25, 26, 27	// all alt is 1
 		*pGPIODRegA1 = (*pGPIODRegA1 & ~0x00FFF000) | 0x00555000;
-		pGPD->GPIOx_SLEW			&= ~(0x3F << 22);
-		pGPD->GPIOx_SLEW_DISABLE_DEFAULT	|=   0x3F << 22;
-		pGPD->GPIOx_DRV0			|=   0x3F << 22;
-		pGPD->GPIOx_DRV0_DISABLE_DEFAULT	|=   0x3F << 22;
-		pGPD->GPIOx_DRV1			|=   0x3F << 22;
-		pGPD->GPIOx_DRV1_DISABLE_DEFAULT	|=   0x3F << 22;
-		pGPD->GPIOx_PULLSEL			|=   0x3F << 22;
-		pGPD->GPIOx_PULLSEL_DISABLE_DEFAULT	|=   0x3F << 22;
-//		pGPD->GPIOx_PULLENB			|=   0x3F << 22;
-		pGPD->GPIOx_PULLENB			|=   0x3E << 22;	// clk is not pull-up.
-		pGPD->GPIOx_PULLENB_DISABLE_DEFAULT	|=   0x3F << 22;
+		pGPD->GPIOx_SLEW		&= ~(0x3F << 22);
+		pGPD->GPIOx_SLEW_DD		|=   0x3F << 22;
+		pGPD->GPIOx_DRV0		|=   0x3F << 22;
+		pGPD->GPIOx_DRV0_DD		|=   0x3F << 22;
+		pGPD->GPIOx_DRV1		|=   0x3F << 22;
+		pGPD->GPIOx_DRV1_DD		|=   0x3F << 22;
+		pGPD->GPIOx_PULLSEL		|=   0x3F << 22;
+		pGPD->GPIOx_PULLSEL_DD		|=   0x3F << 22;
+//		pGPD->GPIOx_PULLENB		|=   0x3F << 22;
+		pGPD->GPIOx_PULLENB		|=   0x3E << 22;	// clk is not pull-up.
+		pGPD->GPIOx_PULLENB_DD		|=   0x3F << 22;
 	} else {
-		struct NX_GPIO_RegisterSet *pGPC = pReg_GPIO[2];
-		register U32 *pGPIOCRegA1 = (U32 *)&pGPC->GPIOxALTFN[1];
+		volatile struct NX_GPIO_RegisterSet *pGPC = pReg_GPIO[2];
+		register volatile u32 *pGPIOCRegA1 = (u32 *)&pGPC->GPIOxALTFN[1];
 		// c 18, 19, 20, 21, 22, 23	// all alt is 2
 		*pGPIOCRegA1 = (*pGPIOCRegA1 & ~0x0000FFF0) | 0x0000AAA0;
-		pGPC->GPIOx_SLEW			&= ~(0x3F << 18);
-		pGPC->GPIOx_SLEW_DISABLE_DEFAULT	|=   0x3F << 18;
-		pGPC->GPIOx_DRV0			|=   0x3F << 18;
-		pGPC->GPIOx_DRV0_DISABLE_DEFAULT	|=   0x3F << 18;
-		pGPC->GPIOx_DRV1			|=   0x3F << 18;
-		pGPC->GPIOx_DRV1_DISABLE_DEFAULT	|=   0x3F << 18;
-		pGPC->GPIOx_PULLSEL			|=   0x3F << 18;
-		pGPC->GPIOx_PULLSEL_DISABLE_DEFAULT	|=   0x3F << 18;
-//		pGPC->GPIOx_PULLENB			|=   0x3F << 18;
-		pGPC->GPIOx_PULLENB			|=   0x3E << 18;	// clk is not pull-up.
-		pGPC->GPIOx_PULLENB_DISABLE_DEFAULT	|=   0x3F << 18;
+		pGPC->GPIOx_SLEW		&= ~(0x3F << 18);
+		pGPC->GPIOx_SLEW_DD		|=   0x3F << 18;
+		pGPC->GPIOx_DRV0		|=   0x3F << 18;
+		pGPC->GPIOx_DRV0_DD		|=   0x3F << 18;
+		pGPC->GPIOx_DRV1		|=   0x3F << 18;
+		pGPC->GPIOx_DRV1_DD		|=   0x3F << 18;
+		pGPC->GPIOx_PULLSEL		|=   0x3F << 18;
+		pGPC->GPIOx_PULLSEL_DD		|=   0x3F << 18;
+//		pGPC->GPIOx_PULLENB		|=   0x3F << 18;
+		pGPC->GPIOx_PULLENB		|=   0x3E << 18;	// clk is not pull-up.
+		pGPC->GPIOx_PULLENB_DD		|=   0x3F << 18;
 	}
 }
 
 #if 1
-void NX_SDPADSetGPIO(U32 PortNum)
+void NX_SDPADSetGPIO(u32 PortNum)
 {
 	if (PortNum == 0) {
-		struct NX_GPIO_RegisterSet *pGPA = pReg_GPIO[0];
-		struct NX_GPIO_RegisterSet *pGPB = pReg_GPIO[1];
-		register U32 *pGPIOARegA1 = (U32 *)&pGPA->GPIOxALTFN[1];
-		register U32 *pGPIOBRegA0 = (U32 *)&pGPB->GPIOxALTFN[0];
+		volatile struct NX_GPIO_RegisterSet *pGPA = pReg_GPIO[0];
+		volatile struct NX_GPIO_RegisterSet *pGPB = pReg_GPIO[1];
+		register volatile u32 *pGPIOARegA1 = (u32 *)&pGPA->GPIOxALTFN[1];
+		register volatile u32 *pGPIOBRegA0 = (u32 *)&pGPB->GPIOxALTFN[0];
 		*pGPIOARegA1 &= ~0xCC000000;	// all gpio is 0
 		*pGPIOBRegA0 &= ~0x0000CCCC;
-		pGPA->GPIOx_SLEW			|=   5 << 29;
-		pGPA->GPIOx_SLEW_DISABLE_DEFAULT	|=   5 << 29;
-		pGPA->GPIOx_DRV0			&= ~(5 << 29);
-		pGPA->GPIOx_DRV0_DISABLE_DEFAULT	|=   5 << 29;
-		pGPA->GPIOx_DRV1			&= ~(5 << 29);
-		pGPA->GPIOx_DRV1_DISABLE_DEFAULT	|=   5 << 29;
-		pGPA->GPIOx_PULLSEL			&= ~(5 << 29);
-		pGPA->GPIOx_PULLSEL_DISABLE_DEFAULT	&= ~(5 << 29);
-		pGPA->GPIOx_PULLENB			&= ~(5 << 29);
-		pGPA->GPIOx_PULLENB_DISABLE_DEFAULT	&= ~(5 << 29);
+		pGPA->GPIOx_SLEW		|=   5 << 29;
+		pGPA->GPIOx_SLEW_DD		|=   5 << 29;
+		pGPA->GPIOx_DRV0		&= ~(5 << 29);
+		pGPA->GPIOx_DRV0_DD		|=   5 << 29;
+		pGPA->GPIOx_DRV1		&= ~(5 << 29);
+		pGPA->GPIOx_DRV1_DD		|=   5 << 29;
+		pGPA->GPIOx_PULLSEL		&= ~(5 << 29);
+		pGPA->GPIOx_PULLSEL_DD		&= ~(5 << 29);
+		pGPA->GPIOx_PULLENB		&= ~(5 << 29);
+		pGPA->GPIOx_PULLENB_DD		&= ~(5 << 29);
 
-		pGPB->GPIOx_SLEW			|=   0x55 << 1;
-		pGPB->GPIOx_SLEW_DISABLE_DEFAULT	|=   0x55 << 1;
-		pGPB->GPIOx_DRV0			&= ~(0x55 << 1);
-		pGPB->GPIOx_DRV0_DISABLE_DEFAULT	|=   0x55 << 1;
-		pGPB->GPIOx_DRV1			&= ~(0x55 << 1);
-		pGPB->GPIOx_DRV1_DISABLE_DEFAULT	|=   0x55 << 1;
-		pGPB->GPIOx_PULLSEL			&= ~(0x55 << 1);
-		pGPB->GPIOx_PULLSEL_DISABLE_DEFAULT	&= ~(0x55 << 1);
-		pGPB->GPIOx_PULLENB			&= ~(0x55 << 1);
-		pGPB->GPIOx_PULLENB_DISABLE_DEFAULT	&= ~(0x55 << 1);
+		pGPB->GPIOx_SLEW		|=   0x55 << 1;
+		pGPB->GPIOx_SLEW_DD		|=   0x55 << 1;
+		pGPB->GPIOx_DRV0		&= ~(0x55 << 1);
+		pGPB->GPIOx_DRV0_DD		|=   0x55 << 1;
+		pGPB->GPIOx_DRV1		&= ~(0x55 << 1);
+		pGPB->GPIOx_DRV1_DD		|=   0x55 << 1;
+		pGPB->GPIOx_PULLSEL		&= ~(0x55 << 1);
+		pGPB->GPIOx_PULLSEL_DD		&= ~(0x55 << 1);
+		pGPB->GPIOx_PULLENB		&= ~(0x55 << 1);
+		pGPB->GPIOx_PULLENB_DD		&= ~(0x55 << 1);
 	} else if (PortNum == 1) {
-		struct NX_GPIO_RegisterSet *pGPD = pReg_GPIO[3];
+		volatile struct NX_GPIO_RegisterSet *pGPD = pReg_GPIO[3];
 		// d 22, 23, 24, 25, 26, 27
-		register U32 *pGPIODRegA1 = (U32 *)&pGPD->GPIOxALTFN[1];
+		register volatile u32 *pGPIODRegA1 = (u32 *)&pGPD->GPIOxALTFN[1];
 		*pGPIODRegA1 = (*pGPIODRegA1 & ~0x00FFF000);	// all gpio is 0
-		pGPD->GPIOx_SLEW			|=   0x3F << 22;
-		pGPD->GPIOx_SLEW_DISABLE_DEFAULT	|=   0x3F << 22;
-		pGPD->GPIOx_DRV0			&= ~(0x3F << 22);
-		pGPD->GPIOx_DRV0_DISABLE_DEFAULT	|=   0x3F << 22;
-		pGPD->GPIOx_DRV1			&= ~(0x3F << 22);
-		pGPD->GPIOx_DRV1_DISABLE_DEFAULT	|=   0x3F << 22;
-		pGPD->GPIOx_PULLSEL			&= ~(0x3F << 22);
-		pGPD->GPIOx_PULLSEL_DISABLE_DEFAULT	&= ~(0x3F << 22);
-		pGPD->GPIOx_PULLENB			&= ~(0x3F << 22);
-		pGPD->GPIOx_PULLENB_DISABLE_DEFAULT	&= ~(0x3F << 22);
+		pGPD->GPIOx_SLEW		|=   0x3F << 22;
+		pGPD->GPIOx_SLEW_DD		|=   0x3F << 22;
+		pGPD->GPIOx_DRV0		&= ~(0x3F << 22);
+		pGPD->GPIOx_DRV0_DD		|=   0x3F << 22;
+		pGPD->GPIOx_DRV1		&= ~(0x3F << 22);
+		pGPD->GPIOx_DRV1_DD		|=   0x3F << 22;
+		pGPD->GPIOx_PULLSEL		&= ~(0x3F << 22);
+		pGPD->GPIOx_PULLSEL_DD		&= ~(0x3F << 22);
+		pGPD->GPIOx_PULLENB		&= ~(0x3F << 22);
+		pGPD->GPIOx_PULLENB_DD		&= ~(0x3F << 22);
 	} else {
-		struct NX_GPIO_RegisterSet *pGPC = pReg_GPIO[2];
-		register U32 *pGPIOCRegA1 = (U32 *)&pGPC->GPIOxALTFN[1];
+		volatile struct NX_GPIO_RegisterSet *pGPC = pReg_GPIO[2];
+		register volatile u32 *pGPIOCRegA1 = (u32 *)&pGPC->GPIOxALTFN[1];
 		// all gpio is 1
 		*pGPIOCRegA1 = (*pGPIOCRegA1 & ~0x0000FFF0) | 0x00005550;
-		pGPC->GPIOx_SLEW			|=   0x3F << 18;
-		pGPC->GPIOx_SLEW_DISABLE_DEFAULT	|=   0x3F << 18;
-		pGPC->GPIOx_DRV0			&= ~(0x3F << 18);
-		pGPC->GPIOx_DRV0_DISABLE_DEFAULT	|=   0x3F << 18;
-		pGPC->GPIOx_DRV1			&= ~(0x3F << 18);
-		pGPC->GPIOx_DRV1_DISABLE_DEFAULT	|=   0x3F << 18;
-		pGPC->GPIOx_PULLSEL			&= ~(0x3F << 18);
-		pGPC->GPIOx_PULLSEL_DISABLE_DEFAULT	&= ~(0x3F << 18);
-		pGPC->GPIOx_PULLENB			&= ~(0x3F << 18);
-		pGPC->GPIOx_PULLENB_DISABLE_DEFAULT	&= ~(0x3F << 18);
+		pGPC->GPIOx_SLEW		|=   0x3F << 18;
+		pGPC->GPIOx_SLEW_DD		|=   0x3F << 18;
+		pGPC->GPIOx_DRV0		&= ~(0x3F << 18);
+		pGPC->GPIOx_DRV0_DD		|=   0x3F << 18;
+		pGPC->GPIOx_DRV1		&= ~(0x3F << 18);
+		pGPC->GPIOx_DRV1_DD		|=   0x3F << 18;
+		pGPC->GPIOx_PULLSEL		&= ~(0x3F << 18);
+		pGPC->GPIOx_PULLSEL_DD		&= ~(0x3F << 18);
+		pGPC->GPIOx_PULLENB		&= ~(0x3F << 18);
+		pGPC->GPIOx_PULLENB_DD		&= ~(0x3F << 18);
 	}
 }
 #endif
 
-#if 0
-//------------------------------------------------------------------------------
-U32 iSDXCBOOT(struct NX_SecondBootInfo *pTBI)
-{
-	CBOOL result = CFALSE;
-	SDXCBOOTSTATUS lSDXCBootStatus;
-	SDXCBOOTSTATUS *pSDXCBootStatus = &lSDXCBootStatus;
-
-#if defined(CHIPID_NXP4330)
-	pSBI->DBI.SDMMCBI.PortNumber = 0;
-#endif
-
-//	pSBI->DBI.SDMMCBI.PortNumber = 1;
-//	pSBI->DEVICEADDR = 128 * 1024;
-
-	NX_ASSERT(pSBI->DBI.SDMMCBI.PortNumber < 3);
-	pSDXCBootStatus->SDPort = pSBI->DBI.SDMMCBI.PortNumber;
-
-	NX_SDPADSetALT(pSDXCBootStatus->SDPort);
-
-	NX_SDMMC_Init(pSDXCBootStatus);
-
-	//----------------------------------------------------------------------
-	// Normal SD(eSD)/MMC ver 4.2 boot
-	result = SDMMCBOOT(pSDXCBootStatus, pTBI);
-
-	NX_SDMMC_Close(pSDXCBootStatus);
-	NX_SDMMC_Terminate(pSDXCBootStatus);
-
-//	NX_SDPADSetGPIO(pSDXCBootStatus->SDPort);
-
-	return result;
-}
-#endif
 /*----------------------------------------------------------------------------*/
-SDXCBOOTSTATUS lcardstatus;
-CBOOL init_mmc(unsigned int portnum)
+static SDXCBOOTSTATUS lcardstatus;
+cbool init_mmc(u32 portnum)
 {
 	SDXCBOOTSTATUS *pcardstatus = &lcardstatus;
 
@@ -1407,7 +1266,7 @@ CBOOL init_mmc(unsigned int portnum)
 	return CTRUE;
 }
 
-void deinit_mmc(unsigned int portnum)
+void deinit_mmc(u32 portnum)
 {
 	SDXCBOOTSTATUS *pcardstatus = &lcardstatus;
 	portnum = portnum;
@@ -1417,15 +1276,15 @@ void deinit_mmc(unsigned int portnum)
 
 	NX_SDPADSetGPIO(pcardstatus->SDPort);
 }
-CBOOL load_mmc(unsigned int portnum,
-		unsigned int startsector,
-		unsigned int sectorcount,
+cbool load_mmc(u32 portnum,
+		u32 startsector,
+		u32 sectorcount,
 		void *pmem,
-		unsigned char *key,
-		CBOOL dec)
+		u8 *key,
+		cbool dec)
 {
 	SDXCBOOTSTATUS *pcardstatus = &lcardstatus;
-	CBOOL    result = CFALSE;
+	cbool    result = CFALSE;
 	volatile struct NX_SDMMC_RegisterSet * const pSDXCReg =
 		pgSDXCReg[pcardstatus->SDPort];
 
@@ -1442,17 +1301,19 @@ CBOOL load_mmc(unsigned int portnum,
 	}
 
 	dprintf("sd%d load image at %x sector, cnt:%x, target:%x\r\n",
-			portnum, startsector, sectorcount, (unsigned long)pmem);
+			portnum, startsector, sectorcount, (u32)pmem);
 
 	result = NX_SDMMC_ReadSectors(pcardstatus,
 			startsector,
 			sectorcount,
-			(unsigned int *)pmem);
+			(u32 *)pmem);
 	if (result == CFALSE) {
 		printf("image read failure\r\n");
 	}
 //	if (dec)
 //		Decrypt(pmem, pmem, sectorcount * BLOCK_LENGTH, key);
+	key = key;
+	dec = dec;
 
 	return result;
 }
@@ -1461,23 +1322,25 @@ enum {
 	NON_SECURE_BL = 1,
 	SECURE_OS = 2
 };
-char *bootmsg [] = {
+#if (dprintf)
+static char *bootmsg [] = {
 	"secure dispatcher",
 	"non-secure bootloader",
 	"secure os"
 };
+#endif
 extern void startup(void);
 struct nx_bootheader * getmyheader(void)
 {
-	return (struct nx_bootheader *)((U32)startup - 
+	return (struct nx_bootheader *)((u32)startup - 
 			sizeof(struct nx_bootheader));
 }
 int plat_load_image(struct NX_SecondBootInfo *pTBS,
-		unsigned int slot, CBOOL dec)
+		u32 slot, cbool dec)
 {
 	struct nx_bootheader *hdr = (struct nx_bootheader *)getmyheader();
 	struct nx_bootheader *bh;
-	unsigned char *key = hdr->tbbi.dbi[slot].sdmmcbi.cryptokey;
+	u8 *key = hdr->tbbi.dbi[slot].sdmmcbi.cryptokey;
 
 	struct nx_bootheader loaded_hdr;
 	bh = &loaded_hdr;
@@ -1507,14 +1370,14 @@ int plat_load_image(struct NX_SecondBootInfo *pTBS,
 	pTBS->LAUNCHADDR = bh->tbbi.startaddr;
 
 #ifdef SECURE_ON
-	return readimage((unsigned char *)bh, (unsigned char *)hdr,
-			 (unsigned char *)bh->tbbi.loadaddr);
+	return readimage((u8 *)bh, (u8 *)hdr,
+			 (u8 *)bh->tbbi.loadaddr);
 #else
 	return 0;
 #endif
 }
 
-int sdemmcboot(CBOOL isresume,
+int sdemmcboot(cbool isresume,
 		struct NX_SecondBootInfo *pTDS,
 		struct NX_SecondBootInfo *pTBS,
 		struct NX_SecondBootInfo *pTBNS)
@@ -1532,6 +1395,7 @@ int sdemmcboot(CBOOL isresume,
 		if (ret == 0) {
 			int tmp = plat_load_image(pTBS, SECURE_OS, CTRUE);
 			dprintf("secure os %d\r\n", tmp);
+			tmp = tmp;
 		}
 	}
 

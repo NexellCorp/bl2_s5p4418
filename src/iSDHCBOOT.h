@@ -1,19 +1,17 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Sangjong, Han <hans@nexell.co.kr>
+ * Copyright (C) 2016  Nexell Co., Ltd. All Rights Reserved.
+ * Nexell Co. Proprietary & Confidential
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Nexell informs that this code and information is provided "as is" base
+ * and without warranty of any kind, either expressed or implied, including
+ * but not limited to the implied warranties of merchantability and/or
+ * fitness for a particular puporse.
+ * 
+ * Module	:
+ * File		:
+ * Description	:
+ * Author	: Hans
+ * History	: 2017.02.28 new release
  */
 #ifndef __NX_SDHCBOOT_H__
 #define __NX_SDHCBOOT_H__
@@ -162,11 +160,11 @@
 
 typedef struct tag_NX_SDMMC_COMMAND
 {
-	U32	cmdidx;
-	U32	arg;
-	U32	flag;
-	U32	status;
-	U32	response[4];
+	u32	cmdidx;
+	u32	arg;
+	u32	flag;
+	u32	status;
+	u32	response[4];
 } NX_SDMMC_COMMAND;
 
 //------------------------------------------------------------------------------
@@ -182,9 +180,9 @@ typedef struct tag_SDXCBOOTSTATUS
 {
 	NX_SDMMC_CARDTYPE	CardType;
 
-	U32			rca;		// relative card address of device
-	CBOOL		bHighCapacity;
-	U32			SDPort;
+	u32			rca;		// relative card address of device
+	cbool		bHighCapacity;
+	u32			SDPort;
 } SDXCBOOTSTATUS;
 
 //------------------------------------------------------------------------------
@@ -252,23 +250,23 @@ typedef struct tag_SDXCBOOTSTATUS
 
 
 
-CBOOL	NX_SDMMC_Init(SDXCBOOTSTATUS * pSDXCBootStatus);
+cbool	NX_SDMMC_Init(SDXCBOOTSTATUS * pSDXCBootStatus);
 
 //------------------------------------------------------------------------------
-CBOOL	NX_SDMMC_Terminate(SDXCBOOTSTATUS * pSDXCBootStatus);
+cbool	NX_SDMMC_Terminate(SDXCBOOTSTATUS * pSDXCBootStatus);
 
 //------------------------------------------------------------------------------
-CBOOL	NX_SDMMC_Open(SDXCBOOTSTATUS * pSDXCBootStatus);//U32 option);
+cbool	NX_SDMMC_Open(SDXCBOOTSTATUS * pSDXCBootStatus);//u32 option);
 
 //------------------------------------------------------------------------------
-CBOOL	NX_SDMMC_Close(SDXCBOOTSTATUS * pSDXCBootStatus);
+cbool	NX_SDMMC_Close(SDXCBOOTSTATUS * pSDXCBootStatus);
 
 //------------------------------------------------------------------------------
-CBOOL	NX_SDMMC_ReadSectors(SDXCBOOTSTATUS * pSDXCBootStatus,
-		U32 SectorNum, U32 numberOfSector, U32 *pdwBuffer);
+cbool	NX_SDMMC_ReadSectors(SDXCBOOTSTATUS * pSDXCBootStatus,
+		u32 SectorNum, u32 numberOfSector, u32 *pdwBuffer);
 
-void NX_SDPADSetALT(U32 PortNum);
+void NX_SDPADSetALT(u32 PortNum);
 
-void NX_SDPADSetGPIO(U32 PortNum);
+void NX_SDPADSetGPIO(u32 PortNum);
 
 #endif  // __NX_SDHCBOOT_H__

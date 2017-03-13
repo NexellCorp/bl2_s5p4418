@@ -1,19 +1,17 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Sangjong, Han <hans@nexell.co.kr>
+ * Copyright (C) 2016  Nexell Co., Ltd. All Rights Reserved.
+ * Nexell Co. Proprietary & Confidential
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Nexell informs that this code and information is provided "as is" base
+ * and without warranty of any kind, either expressed or implied, including
+ * but not limited to the implied warranties of merchantability and/or
+ * fitness for a particular puporse.
+ * 
+ * Module	:
+ * File		:
+ * Description	:
+ * Author	: Hans
+ * History	: 2017.02.28 new release
  */
 
 #ifndef __DEBUG_H__
@@ -61,25 +59,9 @@
 # define VERBOSE(...)
 #endif
 
-CBOOL DebugInit(U32 port);
- void DebugPutch(S8 ch);
-CBOOL DebugIsUartTxDone(void);
+cbool DebugInit(u32 port);
+ void DebugPutch(s8 ch);
+cbool DebugIsUartTxDone(void);
 
-#if 0	// Not yet unused.
-S8      DebugGetch( void );
-CBOOL	DebugIsTXEmpty(void);
-CBOOL   DebugIsBusy( void );
-
-void    DebugPutString( const S8* const String );
-S32     DebugGetString( S8* const pStringBuffer );
-
-void    DebugPutDec( S32 value );
-void    DebugPutHex( S32 value );
-void    DebugPutByte( S8 value );
-void    DebugPutWord( S16 value );
-void    DebugPutDWord( S32 value );
-
-//void    DebugPrint( const S8* const FormatString, ... );
-#endif
 #endif /* __DEBUG_H__ */
 

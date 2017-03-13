@@ -1,83 +1,59 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Sangjong, Han <hans@nexell.co.kr>
+ * Copyright (C) 2016  Nexell Co., Ltd. All Rights Reserved.
+ * Nexell Co. Proprietary & Confidential
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Nexell informs that this code and information is provided "as is" base
+ * and without warranty of any kind, either expressed or implied, including
+ * but not limited to the implied warranties of merchantability and/or
+ * fitness for a particular puporse.
+ * 
+ * Module	:
+ * File		:
+ * Description	:
+ * Author	: Hans
+ * History	: 2017.02.28 new release
  */
 #define __SET_GLOBAL_VARIABLES
 
 #include "sysheader.h"
 #include "nx_bootheader.h"
 
-extern void DMC_Delay(int milisecond);
-extern void ResetCon(U32 devicenum, CBOOL en);
-
-extern CBOOL iUSBBOOT(struct NX_SecondBootInfo * pTBI);
-extern CBOOL iSDXCBOOT(struct NX_SecondBootInfo * pTBI);
-extern void launch(CBOOL, U32, U32, U32);
+extern cbool iUSBBOOT(struct NX_SecondBootInfo * pTBI);
+extern void launch(cbool, u32, u32, u32);
 extern void buildinfo(void);
-int sdemmcboot(CBOOL isresume,
+int sdemmcboot(cbool isresume,
 		struct NX_SecondBootInfo *pTBS,
 		struct NX_SecondBootInfo *pTBNS,
 		struct NX_SecondBootInfo *pTDS);
 
-extern int CRC_Check(void* buf, unsigned int size, unsigned int ref_crc);
-
-void enableL2Cache(unsigned int enb)
-{
-	unsigned int reg;
-
-	// L2 Cache
-	reg = ReadIO32(&pReg_Tieoff->TIEOFFREG[0]);
-	if (enb)
-		reg |= (3UL << 12);
-	else
-		reg &= ~(3UL << 12);
-
-	WriteIO32(&pReg_Tieoff->TIEOFFREG[0], reg);
-}
-
-void BootMain(CBOOL isresume, struct nx_bootheader *pBH)
+void BootMain(cbool isresume, struct nx_bootheader *pBH)
 {
 	struct NX_SecondBootInfo TBS, TBNS, TDS;
 	struct NX_SecondBootInfo *pTDS = &TDS; // secure dispatcher info
 	struct NX_SecondBootInfo *pTBS = &TBS; // secure third boot info
 	struct NX_SecondBootInfo *pTBNS = &TBNS; // non-secure third boot info
 	int ret = CFALSE;
-	U32 debug_ch = 0;
+	u32 debug_ch = 0;
 
 //#if defined(AVN) || defined(NAVI) || defined(RAPTOR)
 	debug_ch = 3;
 //#endif
 
-#if 1 // Low Level Debug Message
-	/*  Low Level Debug Message */
+#if 1
 	DebugInit(debug_ch);
 #endif
-	/* Build information */
 	buildinfo();
 
 	switch (pSBI->DBI.SPIBI.LoadDevice) {
 	default:
 #if defined(SUPPORT_USB_BOOT)
 	case BOOT_FROM_USB:
-		printf("Loading dispatcher from usb...\r\n");
+		NOTICE("Loading dispatcher from usb...\r\n");
 		ret = iUSBBOOT(pTDS);	// for USB boot
 		if (!isresume) {
-			printf("Loading Secure OS from usb...\r\n");
+			NOTICE("Loading Secure OS from usb...\r\n");
 			ret = iUSBBOOT(pTBS);	// for USB boot
-			printf("Loading U-Boot from usb...\r\n");
+			NOTICE("Loading U-Boot from usb...\r\n");
 			ret = iUSBBOOT(pTBNS);	// for USB boot
 		}
 		break;
@@ -85,15 +61,15 @@ void BootMain(CBOOL isresume, struct nx_bootheader *pBH)
 
 #if defined(SUPPORT_SDMMC_BOOT)
 	case BOOT_FROM_SDMMC:
-		printf("Loading from sdmmc... %d\r\n", isresume);
+		NOTICE("Loading from sdmmc... %d\r\n", isresume);
 		ret = sdemmcboot(isresume, pTDS, pTBS, pTBNS);
 		break;
 #endif
 	}
 
 	if (ret) {
-		printf(" Image Loading Done!\r\n");
-		printf("Launch to 0x%08X\r\n", pTDS->LAUNCHADDR);
+		NOTICE(" Image Loading Done!\r\n");
+		NOTICE("Launch to 0x%08X\r\n", pTDS->LAUNCHADDR);
 		while (!DebugIsUartTxDone())
 			;
 		if (isresume) {
@@ -110,6 +86,7 @@ void BootMain(CBOOL isresume, struct nx_bootheader *pBH)
 				pTDS->LAUNCHADDR);
 	}
 
-	printf("Image Loading Failure Try to USB boot\r\n");
-	while (!DebugIsUartTxDone());
+	ERROR("Image Loading Failure Try to USB boot\r\n");
+	while (!DebugIsUartTxDone())
+		;
 }

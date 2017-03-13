@@ -1,19 +1,17 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Sangjong, Han <hans@nexell.co.kr>
+ * Copyright (C) 2016  Nexell Co., Ltd. All Rights Reserved.
+ * Nexell Co. Proprietary & Confidential
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Nexell informs that this code and information is provided "as is" base
+ * and without warranty of any kind, either expressed or implied, including
+ * but not limited to the implied warranties of merchantability and/or
+ * fitness for a particular puporse.
+ * 
+ * Module	:
+ * File		:
+ * Description	:
+ * Author	: Hans
+ * History	: 2017.02.28 new release
  */
 
 #ifndef __NX_OTG_HS_H__
@@ -103,136 +101,136 @@ enum DESCRIPTORTYPE
  */
 
 struct NX_USB_OTG_GCSR_RegisterSet {
-	volatile U32 GOTGCTL;		/* 0x000 R/W OTG Control and Status */
-	volatile U32 GOTGINT;		/* 0x004 R/W OTG Interrupt */
-	volatile U32 GAHBCFG;		/* 0x008 R/W Core AHB Configuration */
-	volatile U32 GUSBCFG;		/* 0x00C R/W Core USB Configuration */
-	volatile U32 GRSTCTL;		/* 0x010 R/W Core Reset */
-	volatile U32 GINTSTS;		/* 0x014 R/W Core Interrupt */
-	volatile U32 GINTMSK;		/* 0x018 R/W Core Interrupt Mask */
-	volatile U32 GRXSTSR;		/* 0x01C R   Receive Status Debug Read */
-	volatile U32 GRXSTSP;		/* 0x020 R/W Receive Status Debug Pop */
-	volatile U32 GRXFSIZ;		/* 0x024 R/W Receive FIFO Size */
-	volatile U32 GNPTXFSIZ;		/* 0x028 R   Non-Periodic Transmit FIFO Size */
-	volatile U32 GNPTXSTS;		/* 0x02C R/W Non-Periodic Transmit FIFO/Queue Status */
-	volatile U32 GReserved0;	/* 0x030     Reserved */
-	volatile U32 GReserved1;	/* 0x034     Reserved */
-	volatile U32 GReserved2;	/* 0x038     Reserved */
-	volatile U32 GUID;		/* 0x03C R   User ID */
-	volatile U32 GSNPSID;		/* 0x040 R   Synopsys ID */
-	volatile U32 GHWCFG1;		/* 0x044 R   User HW Config1 */
-	volatile U32 GHWCFG2;		/* 0x048 R   User HW Config2 */
-	volatile U32 GHWCFG3;		/* 0x04C R   User HW Config3 */
-	volatile U32 GHWCFG4;		/* 0x050 R   User HW Config4 */
-	volatile U32 GLPMCFG;		/* 0x054 R/W Core LPM Configuration */
-	volatile U32 GReserved3[(0x100-0x058)/4];	/* 0x058 ~ 0x0FC */
-	volatile U32 HPTXFSIZ;		/* 0x100 R/W Host Periodic Transmit FIFO Size */
-	volatile U32 DIEPTXF[15];	/* 0x104 ~ 0x13C R/W Device IN Endpoint Transmit FIFO Size */
-	volatile U32 GReserved4[(0x400-0x140)/4];	/* 0x140 ~ 0x3FC */
+	volatile u32 GOTGCTL;		/* 0x000 R/W OTG Control and Status */
+	volatile u32 GOTGINT;		/* 0x004 R/W OTG Interrupt */
+	volatile u32 GAHBCFG;		/* 0x008 R/W Core AHB Configuration */
+	volatile u32 GUSBCFG;		/* 0x00C R/W Core USB Configuration */
+	volatile u32 GRSTCTL;		/* 0x010 R/W Core Reset */
+	volatile u32 GINTSTS;		/* 0x014 R/W Core Interrupt */
+	volatile u32 GINTMSK;		/* 0x018 R/W Core Interrupt Mask */
+	volatile u32 GRXSTSR;		/* 0x01C R   Receive Status Debug Read */
+	volatile u32 GRXSTSP;		/* 0x020 R/W Receive Status Debug Pop */
+	volatile u32 GRXFSIZ;		/* 0x024 R/W Receive FIFO Size */
+	volatile u32 GNPTXFSIZ;		/* 0x028 R   Non-Periodic Transmit FIFO Size */
+	volatile u32 GNPTXSTS;		/* 0x02C R/W Non-Periodic Transmit FIFO/Queue Status */
+	volatile u32 GReserved0;	/* 0x030     Reserved */
+	volatile u32 GReserved1;	/* 0x034     Reserved */
+	volatile u32 GReserved2;	/* 0x038     Reserved */
+	volatile u32 GUID;		/* 0x03C R   User ID */
+	volatile u32 GSNPSID;		/* 0x040 R   Synopsys ID */
+	volatile u32 GHWCFG1;		/* 0x044 R   User HW Config1 */
+	volatile u32 GHWCFG2;		/* 0x048 R   User HW Config2 */
+	volatile u32 GHWCFG3;		/* 0x04C R   User HW Config3 */
+	volatile u32 GHWCFG4;		/* 0x050 R   User HW Config4 */
+	volatile u32 GLPMCFG;		/* 0x054 R/W Core LPM Configuration */
+	volatile u32 GReserved3[(0x100-0x058)/4];	/* 0x058 ~ 0x0FC */
+	volatile u32 HPTXFSIZ;		/* 0x100 R/W Host Periodic Transmit FIFO Size */
+	volatile u32 DIEPTXF[15];	/* 0x104 ~ 0x13C R/W Device IN Endpoint Transmit FIFO Size */
+	volatile u32 GReserved4[(0x400-0x140)/4];	/* 0x140 ~ 0x3FC */
 };
 
 struct NX_USB_OTG_Host_Channel_RegisterSet {
-	volatile U32 HCCHAR;		/* 0xn00 R/W Host Channel-n Characteristics */
-	volatile U32 HCSPLT;		/* 0xn04 R/W Host Channel-n Split Control */
-	volatile U32 HCINT;		/* 0xn08 R/W Host Channel-n Interrupt */
-	volatile U32 HCINTMSK;		/* 0xn0C R/W Host Channel-n Interrupt Mask */
-	volatile U32 HCTSIZ;		/* 0xn10 R/W Host Channel-n Transfer Size */
-	volatile U32 HCDMA;		/* 0xn14 R/W Host Channel-n DMA Address */
-	volatile U32 HCReserved[2];	/* 0xn18, 0xn1C Reserved */
+	volatile u32 HCCHAR;		/* 0xn00 R/W Host Channel-n Characteristics */
+	volatile u32 HCSPLT;		/* 0xn04 R/W Host Channel-n Split Control */
+	volatile u32 HCINT;		/* 0xn08 R/W Host Channel-n Interrupt */
+	volatile u32 HCINTMSK;		/* 0xn0C R/W Host Channel-n Interrupt Mask */
+	volatile u32 HCTSIZ;		/* 0xn10 R/W Host Channel-n Transfer Size */
+	volatile u32 HCDMA;		/* 0xn14 R/W Host Channel-n DMA Address */
+	volatile u32 HCReserved[2];	/* 0xn18, 0xn1C Reserved */
 };
 struct NX_USB_OTG_HMCSR_RegisterSet {
-	volatile U32 HCFG;		/* 0x400 R/W Host Configuration */
-	volatile U32 HFIR;		/* 0x404 R/W Host Frame Interval */
-	volatile U32 HFNUM;		/* 0x408 R   Host Frame Number/Frame Time Remaining */
-	volatile U32 HReserved0;	/* 0x40C     Reserved */
-	volatile U32 HPTXSTS;		/* 0x410 R/W Host Periodic Transmit FIFO/Queue Status */
-	volatile U32 HAINT;		/* 0x414 R   Host All Channels Interrupt */
-	volatile U32 HAINTMSK;		/* 0x418 R/W Host All Channels Interrupt Mask */
-	volatile U32 HReserved1[(0x440-0x41C)/4];	/* 0x41C ~ 0x43C Reserved */
-	volatile U32 HPRT;		/* 0x440 R/W Host Port Control and Status */
-	volatile U32 HReserved2[(0x500-0x444)/4];	/* 0x444 ~ 0x4FC Reserved */
+	volatile u32 HCFG;		/* 0x400 R/W Host Configuration */
+	volatile u32 HFIR;		/* 0x404 R/W Host Frame Interval */
+	volatile u32 HFNUM;		/* 0x408 R   Host Frame Number/Frame Time Remaining */
+	volatile u32 HReserved0;	/* 0x40C     Reserved */
+	volatile u32 HPTXSTS;		/* 0x410 R/W Host Periodic Transmit FIFO/Queue Status */
+	volatile u32 HAINT;		/* 0x414 R   Host All Channels Interrupt */
+	volatile u32 HAINTMSK;		/* 0x418 R/W Host All Channels Interrupt Mask */
+	volatile u32 HReserved1[(0x440-0x41C)/4];	/* 0x41C ~ 0x43C Reserved */
+	volatile u32 HPRT;		/* 0x440 R/W Host Port Control and Status */
+	volatile u32 HReserved2[(0x500-0x444)/4];	/* 0x444 ~ 0x4FC Reserved */
 	struct NX_USB_OTG_Host_Channel_RegisterSet HCC[16];	/* 0x500 ~ 0x6FC */
-	volatile U32 HReserved3[(0x800-0x700)/4];	/* 0x700 ~ 0x7FC */
+	volatile u32 HReserved3[(0x800-0x700)/4];	/* 0x700 ~ 0x7FC */
 };
 
 struct NX_USB_OTG_Device_EPI_RegisterSet {
-	volatile U32 DIEPCTL;		/* 0xn00 R/W Device Control IN endpoint n Control */
-	volatile U32 DReserved0;	/* 0xn04     Reserved */
-	volatile U32 DIEPINT;		/* 0xn08 R/W Device Endpoint-n Interrupt */
-	volatile U32 DReserved1;	/* 0xn0C     Reserved */
-	volatile U32 DIEPTSIZ;		/* 0xn10 R/W Device Endpoint-n Transfer Size */
-	volatile U32 DIEPDMA;		/* 0xn14 R/W Device Endpoint-n DMA Address */
-	volatile U32 DTXFSTS;		/* 0xn18 R   Device IN Endpoint Transmit FIFO Status */
-	volatile U32 DIEPDMAB;		/* 0xn1C R   Device Endpoint-n DMA Buffer Address */
+	volatile u32 DIEPCTL;		/* 0xn00 R/W Device Control IN endpoint n Control */
+	volatile u32 DReserved0;	/* 0xn04     Reserved */
+	volatile u32 DIEPINT;		/* 0xn08 R/W Device Endpoint-n Interrupt */
+	volatile u32 DReserved1;	/* 0xn0C     Reserved */
+	volatile u32 DIEPTSIZ;		/* 0xn10 R/W Device Endpoint-n Transfer Size */
+	volatile u32 DIEPDMA;		/* 0xn14 R/W Device Endpoint-n DMA Address */
+	volatile u32 DTXFSTS;		/* 0xn18 R   Device IN Endpoint Transmit FIFO Status */
+	volatile u32 DIEPDMAB;		/* 0xn1C R   Device Endpoint-n DMA Buffer Address */
 };
 struct NX_USB_OTG_Device_EPO_RegisterSet {
-	volatile U32 DOEPCTL;		/* 0xn00 R/W Device Control OUT endpoint n Control */
-	volatile U32 DReserved0;	/* 0xn04     Reserved */
-	volatile U32 DOEPINT;		/* 0xn08 R/W Device Endpoint-n Interrupt */
-	volatile U32 DReserved1;	/* 0xn0C     Reserved */
-	volatile U32 DOEPTSIZ;		/* 0xn10 R/W Device Endpoint-n Transfer Size */
-	volatile U32 DOEPDMA;		/* 0xn14 R/W Device Endpoint-n DMA Address */
-	volatile U32 DReserved2;	/* 0xn18     Reserved */
-	volatile U32 DOEPDMAB;		/* 0xn1C R   Device Endpoint-n DMA Buffer Address */
+	volatile u32 DOEPCTL;		/* 0xn00 R/W Device Control OUT endpoint n Control */
+	volatile u32 DReserved0;	/* 0xn04     Reserved */
+	volatile u32 DOEPINT;		/* 0xn08 R/W Device Endpoint-n Interrupt */
+	volatile u32 DReserved1;	/* 0xn0C     Reserved */
+	volatile u32 DOEPTSIZ;		/* 0xn10 R/W Device Endpoint-n Transfer Size */
+	volatile u32 DOEPDMA;		/* 0xn14 R/W Device Endpoint-n DMA Address */
+	volatile u32 DReserved2;	/* 0xn18     Reserved */
+	volatile u32 DOEPDMAB;		/* 0xn1C R   Device Endpoint-n DMA Buffer Address */
 };
 struct NX_USB_OTG_DMCSR_RegisterSet {
-	volatile U32 DCFG;		/* 0x800 R/W Device Configuration */
-	volatile U32 DCTL;		/* 0x804 R/W Device Control */
-	volatile U32 DSTS;		/* 0x808 R   Device Status */
-	volatile U32 DReserved0;	/* 0x80C     Reserved */
-	volatile U32 DIEPMSK;		/* 0x810 R/W Device IN Endpoint Common Interrupt Mask */
-	volatile U32 DOEPMSK;		/* 0x814 R/W Device OUT Endpoint Common Interrupt Mask */
-	volatile U32 DAINT;		/* 0x818 R   Device All Endpoints Interrupt */
-	volatile U32 DAINTMSK;		/* 0x81C R/W Device All Endpoints Interrupt Mask */
-	volatile U32 DReserved1;	/* 0x820     Reserved */
-	volatile U32 DReserved2;	/* 0x824     Reserved */
-	volatile U32 DVBUSDIS;		/* 0x828 R/W Device VBUS Discharge Time */
-	volatile U32 DVBUSPULSE;	/* 0x82C R/W Device VBUS Pulsing Time */
-	volatile U32 DTHRCTL;		/* 0x830 R/W Device Threshold Control */
-	volatile U32 DIEPEMPMSK;	/* 0x834 R/W Device IN Endpoint FIFO Empty Interrupt Mask */
-	volatile U32 DReserved3;	/* 0x838     Reserved */
-	volatile U32 DReserved4;	/* 0x83C     Reserved */
-	volatile U32 DReserved5[0x10];	/* 0x840 ~ 0x87C    Reserved */
-	volatile U32 DReserved6[0x10];	/* 0x880 ~ 0x8BC    Reserved */
-	volatile U32 DReserved7[0x10];	/* 0x8C0 ~ 0x8FC    Reserved */
+	volatile u32 DCFG;		/* 0x800 R/W Device Configuration */
+	volatile u32 DCTL;		/* 0x804 R/W Device Control */
+	volatile u32 DSTS;		/* 0x808 R   Device Status */
+	volatile u32 DReserved0;	/* 0x80C     Reserved */
+	volatile u32 DIEPMSK;		/* 0x810 R/W Device IN Endpoint Common Interrupt Mask */
+	volatile u32 DOEPMSK;		/* 0x814 R/W Device OUT Endpoint Common Interrupt Mask */
+	volatile u32 DAINT;		/* 0x818 R   Device All Endpoints Interrupt */
+	volatile u32 DAINTMSK;		/* 0x81C R/W Device All Endpoints Interrupt Mask */
+	volatile u32 DReserved1;	/* 0x820     Reserved */
+	volatile u32 DReserved2;	/* 0x824     Reserved */
+	volatile u32 DVBUSDIS;		/* 0x828 R/W Device VBUS Discharge Time */
+	volatile u32 DVBUSPULSE;	/* 0x82C R/W Device VBUS Pulsing Time */
+	volatile u32 DTHRCTL;		/* 0x830 R/W Device Threshold Control */
+	volatile u32 DIEPEMPMSK;	/* 0x834 R/W Device IN Endpoint FIFO Empty Interrupt Mask */
+	volatile u32 DReserved3;	/* 0x838     Reserved */
+	volatile u32 DReserved4;	/* 0x83C     Reserved */
+	volatile u32 DReserved5[0x10];	/* 0x840 ~ 0x87C    Reserved */
+	volatile u32 DReserved6[0x10];	/* 0x880 ~ 0x8BC    Reserved */
+	volatile u32 DReserved7[0x10];	/* 0x8C0 ~ 0x8FC    Reserved */
 	struct NX_USB_OTG_Device_EPI_RegisterSet DEPIR[16];	/* 0x900 ~ 0xAFC */
 	struct NX_USB_OTG_Device_EPO_RegisterSet DEPOR[16]; /* 0xB00 ~ 0xCFC */
 };
 
 struct NX_USB_OTG_PHYCTRL_RegisterSet
 {
-	volatile U32 PCReserved0[0x40/4];	/* 0x00 ~ 0x3C	Reserved */
-	volatile U32 PHYPOR;			/* 0x40 */
-	volatile U32 VBUSINTENB;		/* 0x44 */
-	volatile U32 VBUSPEND;			/* 0x48 */
-	volatile U32 TESTPARM3;			/* 0x4C */
-	volatile U32 TESTPARM4;			/* 0x50 */
-	volatile U32 LINKCTL;			/* 0x54 */
-	volatile U32 TESTPARM6;			/* 0x58 */
-	volatile U32 TESTPARM7;			/* 0x5C */
-	volatile U32 TESTPARM8;			/* 0x60 */
-	volatile U32 TESTPARM9;			/* 0x64 */
-	volatile U32 PCReserved4[(0x100-0x68)/4];	/* 0x68 ~ 0xFC	Reserved */
+	volatile u32 PCReserved0[0x40/4];	/* 0x00 ~ 0x3C	Reserved */
+	volatile u32 PHYPOR;			/* 0x40 */
+	volatile u32 VBUSINTENB;		/* 0x44 */
+	volatile u32 VBUSPEND;			/* 0x48 */
+	volatile u32 TESTPARM3;			/* 0x4C */
+	volatile u32 TESTPARM4;			/* 0x50 */
+	volatile u32 LINKCTL;			/* 0x54 */
+	volatile u32 TESTPARM6;			/* 0x58 */
+	volatile u32 TESTPARM7;			/* 0x5C */
+	volatile u32 TESTPARM8;			/* 0x60 */
+	volatile u32 TESTPARM9;			/* 0x64 */
+	volatile u32 PCReserved4[(0x100-0x68)/4];	/* 0x68 ~ 0xFC	Reserved */
 };
 struct NX_USB_OTG_IFCLK_RegisterSet
 {
-	volatile U32 IFReserved0[0xC0/4];	/* 0x00 ~ 0xBC	Reserved  */
-	volatile U32 IFCLK_MODE;		/* 0xC0 */
-	volatile U32 IFCLKGEN;			/* 0xC4 */
-	volatile U32 IFReserved1[(0x100-0xC8)/4];	/* 0xC8 ~ 0xFC */
+	volatile u32 IFReserved0[0xC0/4];	/* 0x00 ~ 0xBC	Reserved  */
+	volatile u32 IFCLK_MODE;		/* 0xC0 */
+	volatile u32 IFCLKGEN;			/* 0xC4 */
+	volatile u32 IFReserved1[(0x100-0xC8)/4];	/* 0xC8 ~ 0xFC */
 };
 struct NX_USB_OTG_RegisterSet
 {
 	struct NX_USB_OTG_GCSR_RegisterSet  GCSR;	/* 0x0000 ~ 0x03FC */
 	struct NX_USB_OTG_HMCSR_RegisterSet HCSR;	/* 0x0400 ~ 0x07FC */
 	struct NX_USB_OTG_DMCSR_RegisterSet DCSR;	/* 0x0800 ~ 0x0CFC */
-	volatile U32 GReserved0[(0xE00-0xD00)/4];	/* 0x0D00 ~ 0x0DFC Reserved */
-	volatile U32 PCGCCTL;				/* 0x0E00 R/W Power and Clock Gating Control */
-	volatile U32 GReserved1[(0x1000-0xE04)/4];	/* 0x0E04 ~ 0x0FFC Reserved */
-	volatile U32 EPFifo[15][1024];			/* 0x1000 ~ 0xFFFC Endpoint Fifo */
-//	volatile U32 EPFifo[16][1024];			/* 0x1000 ~ 0x10FFC Endpoint Fifo */
-//	volatile U32 GReserved2[(0x20000-0x11000)/4];	/* 0x11000 ~ 0x20000 Reserved */
-//	volatile U32 DEBUGFIFO[0x8000];			/* 0x20000 ~ 0x3FFFC Debug Purpose Direct Fifo Acess */
+	volatile u32 GReserved0[(0xE00-0xD00)/4];	/* 0x0D00 ~ 0x0DFC Reserved */
+	volatile u32 PCGCCTL;				/* 0x0E00 R/W Power and Clock Gating Control */
+	volatile u32 GReserved1[(0x1000-0xE04)/4];	/* 0x0E04 ~ 0x0FFC Reserved */
+	volatile u32 EPFifo[15][1024];			/* 0x1000 ~ 0xFFFC Endpoint Fifo */
+//	volatile u32 EPFifo[16][1024];			/* 0x1000 ~ 0x10FFC Endpoint Fifo */
+//	volatile u32 GReserved2[(0x20000-0x11000)/4];	/* 0x11000 ~ 0x20000 Reserved */
+//	volatile u32 DEBUGFIFO[0x8000];			/* 0x20000 ~ 0x3FFFC Debug Purpose Direct Fifo Acess */
 };
 
 /*definitions related to CSR setting */
@@ -331,32 +329,31 @@ struct NX_USB_OTG_RegisterSet
 #define TRANSFER_DONE			(0x1 << 0)
 
 
-typedef struct
-{
-	U8 bmRequestType;
-	U8 bRequest;
-	U16 wValue;
-	U16 wIndex;
-	U16 wLength;
+typedef struct {
+	u8 bmRequestType;
+	u8 bRequest;
+	u16 wValue;
+	u16 wIndex;
+	u16 wLength;
 } SetupPacket;
 
-typedef enum
-{
+typedef enum {
 	USB_HIGH,
 	USB_FULL,
 	USB_LOW
 //	,0xFFFFFFFFUL
 } USB_SPEED;
 
-typedef enum
-{
-	EP_TYPE_CONTROL, EP_TYPE_ISOCHRONOUS, EP_TYPE_BULK, EP_TYPE_INTERRUPT
+typedef enum {
+	EP_TYPE_CONTROL,
+	EP_TYPE_ISOCHRONOUS,
+	EP_TYPE_BULK,
+	EP_TYPE_INTERRUPT
 } EP_TYPE;
 
 /*------------------------------------------------*/
 /* EP0 state */
-enum EP0_STATE
-{
+enum EP0_STATE {
 	EP0_STATE_INIT			= 0,
 	EP0_STATE_GET_DSCPT		= 1,
 	EP0_STATE_GET_INTERFACE		= 2,
@@ -366,33 +363,33 @@ enum EP0_STATE
 
 typedef struct __attribute__((aligned(4))) tag_USBBOOTSTATUS
 {
-	volatile CBOOL	bDownLoading;
-	CBOOL		bHeaderReceived;
-	U8		*RxBuffAddr;
-	S32		iRxSize;
-	S32		iRxHeaderSize;
+	volatile cbool	bDownLoading;
+	cbool		bHeaderReceived;
+	u8		*RxBuffAddr;
+	s32		iRxSize;
+	s32		iRxHeaderSize;
 
-	U32		ep0_state;
+	u32		ep0_state;
 	USB_SPEED	speed;
-	U32		ctrl_max_pktsize;
-	U32		bulkin_max_pktsize;
-	U32		bulkout_max_pktsize;
+	u32		ctrl_max_pktsize;
+	u32		bulkin_max_pktsize;
+	u32		bulkout_max_pktsize;
 
-	U8*		Current_ptr;
-	U32		Current_Fifo_Size;
-	U32		Remain_size;
+	u8*		Current_ptr;
+	u32		Current_Fifo_Size;
+	u32		Remain_size;
 
-	U32		up_addr;
-	U32		up_size;
-	U8*		up_ptr;
+	u32		up_addr;
+	u32		up_size;
+	u8*		up_ptr;
 
-	U8		CurConfig;
-	U8		CurInterface;
-	U8		CurSetting;
-	U8		__Reserved;
+	u8		CurConfig;
+	u8		CurInterface;
+	u8		CurSetting;
+	u8		__Reserved;
 
-	U8* 		DeviceDescriptor;
-	const U8*	ConfigDescriptor;
+	u8* 		DeviceDescriptor;
+	const u8*	ConfigDescriptor;
 } USBBOOTSTATUS;
 
 

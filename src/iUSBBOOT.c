@@ -1,24 +1,22 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Sangjong, Han <hans@nexell.co.kr>
+ * Copyright (C) 2016  Nexell Co., Ltd. All Rights Reserved.
+ * Nexell Co. Proprietary & Confidential
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Nexell informs that this code and information is provided "as is" base
+ * and without warranty of any kind, either expressed or implied, including
+ * but not limited to the implied warranties of merchantability and/or
+ * fitness for a particular puporse.
+ * 
+ * Module	:
+ * File		:
+ * Description	:
+ * Author	: Hans
+ * History	: 2017.02.28 new release
  */
 #include "sysheader.h"
 
-#include <nx_usbotg.h>
-#include <iUSBBOOT.h>
+#include "iUSBBOOT.h"
+#include "nx_ecid.h"
 
 #ifdef DEBUG
 #define dprintf(x, ...) printf(x, ...)
@@ -26,30 +24,29 @@
 #define dprintf(x, ...)
 #endif
 
-extern U32 iget_fcs(U32 fcs, U32 data);
+void ResetCon(u32 devicenum, cbool en);
 
-void ResetCon(U32 devicenum, CBOOL en);
-
-static NX_USB20OTG_APB_RegisterSet *const pUSB20OTGAPBReg =
-	(NX_USB20OTG_APB_RegisterSet *)PHY_BASEADDR_USB20OTG_MODULE_APB;
-static struct NX_USB_OTG_RegisterSet *const pUOReg =
+static volatile struct NX_USB_OTG_RegisterSet *const pUOReg =
 	(struct NX_USB_OTG_RegisterSet *)PHY_BASEADDR_USB20OTG_MODULE_AHBS0;
 
-static U8 __attribute__((aligned(4)))
+volatile struct NX_ECID_RegisterSet *const pReg_ECID =
+	(struct NX_ECID_RegisterSet *const)PHY_BASEADDR_ECID_MODULE;
+
+static u8 __attribute__((aligned(4)))
 	gs_DeviceDescriptorFS[DEVICE_DESCRIPTOR_SIZE] =
 {
 	18,                             //  0 desc size
-	(U8)(DESCRIPTORTYPE_DEVICE),    //  1 desc type (DEVICE)
-	(U8)(FULL_USB_VER % 0x100),     //  2 USB release
-	(U8)(FULL_USB_VER / 0x100),     //  3 => 1.00
+	(u8)(DESCRIPTORTYPE_DEVICE),    //  1 desc type (DEVICE)
+	(u8)(FULL_USB_VER % 0x100),     //  2 USB release
+	(u8)(FULL_USB_VER / 0x100),     //  3 => 1.00
 	0xFF,                           //  4 class
 	0xFF,                           //  5 subclass
 	0xFF,                           //  6 protocol
-	(U8)FULL_MAX_PKT_SIZE_EP0,      //  7 max pack size
-	(U8)(VENDORID % 0x100),         //  8 vendor ID LSB
-	(U8)(VENDORID / 0x100),         //  9 vendor ID MSB
-	(U8)(PRODUCTID % 0x100),        // 10 product ID LSB    (second product)
-	(U8)(PRODUCTID / 0x100),        // 11 product ID MSB
+	(u8)FULL_MAX_PKT_SIZE_EP0,      //  7 max pack size
+	(u8)(VENDORID % 0x100),         //  8 vendor ID LSB
+	(u8)(VENDORID / 0x100),         //  9 vendor ID MSB
+	(u8)(PRODUCTID % 0x100),        // 10 product ID LSB    (second product)
+	(u8)(PRODUCTID / 0x100),        // 11 product ID MSB
 	0x00,                           // 12 device release LSB
 	0x00,                           // 13 device release MSB
 	0x00,                           // 14 manufacturer string desc index
@@ -58,21 +55,21 @@ static U8 __attribute__((aligned(4)))
 	0x01                            // 17 num of possible configurations
 };
 
-static U8 __attribute__((aligned(4)))
+static u8 __attribute__((aligned(4)))
 	gs_DeviceDescriptorHS[DEVICE_DESCRIPTOR_SIZE] =
 {
 	18,                             //  0 desc size
-	(U8)(DESCRIPTORTYPE_DEVICE),    //  1 desc type (DEVICE)
-	(U8)(HIGH_USB_VER % 0x100),     //  2 USB release
-	(U8)(HIGH_USB_VER / 0x100),     //  3 => 1.00
+	(u8)(DESCRIPTORTYPE_DEVICE),    //  1 desc type (DEVICE)
+	(u8)(HIGH_USB_VER % 0x100),     //  2 USB release
+	(u8)(HIGH_USB_VER / 0x100),     //  3 => 1.00
 	0xFF,                           //  4 class
 	0xFF,                           //  5 subclass
 	0xFF,                           //  6 protocol
-	(U8)HIGH_MAX_PKT_SIZE_EP0,      //  7 max pack size
-	(U8)(VENDORID    % 0x100),      //  8 vendor ID LSB
-	(U8)(VENDORID    / 0x100),      //  9 vendor ID MSB
-	(U8)(PRODUCTID % 0x100),        // 10 product ID LSB    (second product)
-	(U8)(PRODUCTID / 0x100),        // 11 product ID MSB
+	(u8)HIGH_MAX_PKT_SIZE_EP0,      //  7 max pack size
+	(u8)(VENDORID    % 0x100),      //  8 vendor ID LSB
+	(u8)(VENDORID    / 0x100),      //  9 vendor ID MSB
+	(u8)(PRODUCTID % 0x100),        // 10 product ID LSB    (second product)
+	(u8)(PRODUCTID / 0x100),        // 11 product ID MSB
 	0x00,                           // 12 device release LSB
 	0x00,                           // 13 device release MSB
 	0x00,                           // 14 manufacturer string desc index
@@ -82,15 +79,15 @@ static U8 __attribute__((aligned(4)))
 };
 
 
-static const U8 __attribute__((aligned(4)))
+static const u8 __attribute__((aligned(4)))
 	gs_ConfigDescriptorFS[CONFIG_DESCRIPTOR_SIZE] =
 {
 	//--------------------------------------------------------------------------
 	// Configuration Descriptor
 	0x09,                                       // [ 0] desc size
-	(U8)(DESCRIPTORTYPE_CONFIGURATION),         // [ 1] desc type (CONFIGURATION)
-	(U8)(CONFIG_DESCRIPTOR_SIZE % 0x100),       // [ 2] total length of data returned LSB
-	(U8)(CONFIG_DESCRIPTOR_SIZE / 0x100),       // [ 3] total length of data returned MSB
+	(u8)(DESCRIPTORTYPE_CONFIGURATION),         // [ 1] desc type (CONFIGURATION)
+	(u8)(CONFIG_DESCRIPTOR_SIZE % 0x100),       // [ 2] total length of data returned LSB
+	(u8)(CONFIG_DESCRIPTOR_SIZE / 0x100),       // [ 3] total length of data returned MSB
 	0x01,                                       // [ 4] num of interfaces
 	0x01,                                       // [ 5] value to select config (1 for now)
 	0x00,                                       // [ 6] index of string desc ( 0 for now)
@@ -100,7 +97,7 @@ static const U8 __attribute__((aligned(4)))
 	//--------------------------------------------------------------------------
 	// Interface Decriptor
 	0x09,                                       // [ 0] desc size
-	(U8)(DESCRIPTORTYPE_INTERFACE),             // [ 1] desc type (INTERFACE)
+	(u8)(DESCRIPTORTYPE_INTERFACE),             // [ 1] desc type (INTERFACE)
 	0x00,                                       // [ 2] interface index.
 	0x00,                                       // [ 3] value for alternate setting
 	0x02,                                       // [ 4] bNumEndpoints (number endpoints used, excluding EP0)
@@ -112,33 +109,33 @@ static const U8 __attribute__((aligned(4)))
 	//--------------------------------------------------------------------------
 	// Endpoint descriptor (EP 1 Bulk IN)
 	0x07,                                       // [ 0] desc size
-	(U8)(DESCRIPTORTYPE_ENDPOINT),              // [ 1] desc type (ENDPOINT)
+	(u8)(DESCRIPTORTYPE_ENDPOINT),              // [ 1] desc type (ENDPOINT)
 	BULK_IN_EP|EP_ADDR_IN,                      // [ 2] endpoint address: endpoint 1, IN
 	EP_ATTR_BULK,                               // [ 3] endpoint attributes: Bulk
-	(U8)(FULL_MAX_PKT_SIZE_EP1 % 0x100),        // [ 4] max packet size LSB
-	(U8)(FULL_MAX_PKT_SIZE_EP1 / 0x100),        // [ 5] max packet size MSB
+	(u8)(FULL_MAX_PKT_SIZE_EP1 % 0x100),        // [ 4] max packet size LSB
+	(u8)(FULL_MAX_PKT_SIZE_EP1 / 0x100),        // [ 5] max packet size MSB
 	0x00,                                       // [ 6] polling interval (4ms/bit=time,500ms)
 
 	//--------------------------------------------------------------------------
 	// Endpoint descriptor (EP 2 Bulk OUT)
 	0x07,                                       // [ 0] desc size
-	(U8)(DESCRIPTORTYPE_ENDPOINT),              // [ 1] desc type (ENDPOINT)
+	(u8)(DESCRIPTORTYPE_ENDPOINT),              // [ 1] desc type (ENDPOINT)
 	BULK_OUT_EP | EP_ADDR_OUT,                  // [ 2] endpoint address: endpoint 2, OUT
 	EP_ATTR_BULK,                               // [ 3] endpoint attributes: Bulk
-	(U8)(FULL_MAX_PKT_SIZE_EP2 % 0x100),        // [ 4] max packet size LSB
-	(U8)(FULL_MAX_PKT_SIZE_EP2 / 0x100),        // [ 5] max packet size MSB
+	(u8)(FULL_MAX_PKT_SIZE_EP2 % 0x100),        // [ 4] max packet size LSB
+	(u8)(FULL_MAX_PKT_SIZE_EP2 / 0x100),        // [ 5] max packet size MSB
 	0x00                                        // [ 6] polling interval (4ms/bit=time,500ms)
 };
 
-static const U8 __attribute__((aligned(4)))
+static const u8 __attribute__((aligned(4)))
 	gs_ConfigDescriptorHS[CONFIG_DESCRIPTOR_SIZE] =
 {
 	//--------------------------------------------------------------------------
 	// Configuration Descriptor
 	0x09,                                       // [ 0] desc size
-	(U8)(DESCRIPTORTYPE_CONFIGURATION),         // [ 1] desc type (CONFIGURATION)
-	(U8)(CONFIG_DESCRIPTOR_SIZE % 0x100),       // [ 2] total length of data returned LSB
-	(U8)(CONFIG_DESCRIPTOR_SIZE / 0x100),       // [ 3] total length of data returned MSB
+	(u8)(DESCRIPTORTYPE_CONFIGURATION),         // [ 1] desc type (CONFIGURATION)
+	(u8)(CONFIG_DESCRIPTOR_SIZE % 0x100),       // [ 2] total length of data returned LSB
+	(u8)(CONFIG_DESCRIPTOR_SIZE / 0x100),       // [ 3] total length of data returned MSB
 	0x01,                                       // [ 4] num of interfaces
 	0x01,                                       // [ 5] value to select config (1 for now)
 	0x00,                                       // [ 6] index of string desc ( 0 for now)
@@ -148,7 +145,7 @@ static const U8 __attribute__((aligned(4)))
 	//--------------------------------------------------------------------------
 	// Interface Decriptor
 	0x09,                                       // [ 0] desc size
-	(U8)(DESCRIPTORTYPE_INTERFACE),             // [ 1] desc type (INTERFACE)
+	(u8)(DESCRIPTORTYPE_INTERFACE),             // [ 1] desc type (INTERFACE)
 	0x00,                                       // [ 2] interface index.
 	0x00,                                       // [ 3] value for alternate setting
 	0x02,                                       // [ 4] bNumEndpoints (number endpoints used, excluding EP0)
@@ -160,28 +157,28 @@ static const U8 __attribute__((aligned(4)))
 	//--------------------------------------------------------------------------
 	// Endpoint descriptor (EP 1 Bulk IN)
 	0x07,                                       // [ 0] desc size
-	(U8)(DESCRIPTORTYPE_ENDPOINT),              // [ 1] desc type (ENDPOINT)
+	(u8)(DESCRIPTORTYPE_ENDPOINT),              // [ 1] desc type (ENDPOINT)
 	BULK_IN_EP | EP_ADDR_IN,                    // [ 2] endpoint address: endpoint 1, IN
 	EP_ATTR_BULK,                               // [ 3] endpoint attributes: Bulk
-	(U8)(HIGH_MAX_PKT_SIZE_EP1 % 0x100),        // [ 4] max packet size LSB
-	(U8)(HIGH_MAX_PKT_SIZE_EP1 / 0x100),        // [ 5] max packet size MSB
+	(u8)(HIGH_MAX_PKT_SIZE_EP1 % 0x100),        // [ 4] max packet size LSB
+	(u8)(HIGH_MAX_PKT_SIZE_EP1 / 0x100),        // [ 5] max packet size MSB
 	0x00,                                       // [ 6] polling interval (4ms/bit=time,500ms)
 
 	//--------------------------------------------------------------------------
 	// Endpoint descriptor (EP 2 Bulk OUT)
 	0x07,                                       // [ 0] desc size
-	(U8)(DESCRIPTORTYPE_ENDPOINT),              // [ 1] desc type (ENDPOINT)
+	(u8)(DESCRIPTORTYPE_ENDPOINT),              // [ 1] desc type (ENDPOINT)
 	BULK_OUT_EP|EP_ADDR_OUT,                    // [ 2] endpoint address: endpoint 2, OUT
 	EP_ATTR_BULK,                               // [ 3] endpoint attributes: Bulk
-	(U8)(HIGH_MAX_PKT_SIZE_EP2 % 0x100),        // [ 4] max packet size LSB
-	(U8)(HIGH_MAX_PKT_SIZE_EP2 / 0x100),        // [ 5] max packet size MSB
+	(u8)(HIGH_MAX_PKT_SIZE_EP2 % 0x100),        // [ 4] max packet size LSB
+	(u8)(HIGH_MAX_PKT_SIZE_EP2 / 0x100),        // [ 5] max packet size MSB
 	0x00                                        // [ 6] polling interval (4ms/bit=time,500ms)
 };
 
-static void nx_usb_write_in_fifo(U32 ep, U8 *buf, S32 num)
+static void nx_usb_write_in_fifo(u32 ep, u8 *buf, s32 num)
 {
-	S32 i;
-	U32 *dwbuf = (U32 *)buf; /* assume all data ptr is 4 bytes aligned */
+	s32 i;
+	u32 *dwbuf = (u32 *)buf; /* assume all data ptr is 4 bytes aligned */
 	for (i = 0; i < (num + 3) / 4; i++)
 		pUOReg->EPFifo[ep][0] = dwbuf[i];
 }
@@ -193,10 +190,10 @@ static void nx_usb_write_in_fifo(U32 ep, U8 *buf, S32 num)
 static struct NX_SecondBootInfo *g_TBI;
 static USBBOOTSTATUS *g_USBBootStatus;
 
-static void nx_usb_read_out_fifo(U32 ep, U8 *buf, S32 num)
+static void nx_usb_read_out_fifo(u32 ep, u8 *buf, s32 num)
 {
-	S32 i;
-	U32 *dwbuf = (U32 *)buf;
+	s32 i;
+	u32 *dwbuf = (u32 *)buf;
 
 	for (i = 0; i < (num + 3) / 4; i++) {
 		dwbuf[i] = pUOReg->EPFifo[ep][0];
@@ -205,129 +202,130 @@ static void nx_usb_read_out_fifo(U32 ep, U8 *buf, S32 num)
 
 static void nx_usb_ep0_int_hndlr(USBBOOTSTATUS *pUSBBootStatus)
 {
-	U32 buf[2];
+	u32 buf[2];
 	SetupPacket *pSetupPacket = (SetupPacket *)buf;
-	U16 addr;
+	u16 addr;
 
 	dprintf("Event EP0\r\n");
 
-	if (pUSBBootStatus->ep0_state == EP0_STATE_INIT) {
+	if (pUSBBootStatus->ep0_state != EP0_STATE_INIT)
+	       goto noep0;	
 
-		buf[0] = pUOReg->EPFifo[CONTROL_EP][0];
-		buf[1] = pUOReg->EPFifo[CONTROL_EP][0];
+	buf[0] = pUOReg->EPFifo[CONTROL_EP][0];
+	buf[1] = pUOReg->EPFifo[CONTROL_EP][0];
 
-		dprintf("Req:%02X %02X %04X %04X %04X\r\n",
-				pSetupPacket->bmRequestType,
-				pSetupPacket->bRequest,
-				pSetupPacket->wValue,
-				pSetupPacket->wIndex,
-				pSetupPacket->wLength);
-		switch (pSetupPacket->bRequest) {
-		case STANDARD_SET_ADDRESS:
-			/* Set Address Update bit */
-			addr = (pSetupPacket->wValue & 0xFF);
-			dprintf("STANDARD_SET_ADDRESS: %02X\r\n", addr);
-			pUOReg->DCSR.DCFG =
-				1 << 18 | addr << 4 |
-				pUSBBootStatus->speed << 0;
-			pUSBBootStatus->ep0_state = EP0_STATE_INIT;
+	dprintf("Req:%02X %02X %04X %04X %04X\r\n",
+			pSetupPacket->bmRequestType,
+			pSetupPacket->bRequest,
+			pSetupPacket->wValue,
+			pSetupPacket->wIndex,
+			pSetupPacket->wLength);
+	switch (pSetupPacket->bRequest) {
+	case STANDARD_SET_ADDRESS:
+		/* Set Address Update bit */
+		addr = (pSetupPacket->wValue & 0xFF);
+		dprintf("STANDARD_SET_ADDRESS: %02X\r\n", addr);
+		pUOReg->DCSR.DCFG =
+			1 << 18 | addr << 4 |
+			pUSBBootStatus->speed << 0;
+		pUSBBootStatus->ep0_state = EP0_STATE_INIT;
+		break;
+
+	case STANDARD_SET_DESCRIPTOR:
+		dprintf("STANDARD_SET_DESCRIPTOR\r\n");
+		break;
+
+	case STANDARD_SET_CONFIGURATION:
+		dprintf("STANDARD_SET_CONFIGURATION\r\n");
+		/* Configuration value in configuration descriptor */
+		pUSBBootStatus->CurConfig = pSetupPacket->wValue;
+		pUSBBootStatus->ep0_state = EP0_STATE_INIT;
+		break;
+
+	case STANDARD_GET_CONFIGURATION:
+		dprintf("STANDARD_GET_CONFIGURATION\r\n");
+		pUOReg->DCSR.DEPIR[CONTROL_EP].DIEPTSIZ = (1 << 19) |
+							(1 << 0);
+		/*ep0 enable, clear nak, next ep0, 8byte */
+		pUOReg->DCSR.DEPIR[CONTROL_EP].DIEPCTL =
+			EPEN_CNAK_EP0_8;
+		pUOReg->EPFifo[CONTROL_EP][0] =
+			pUSBBootStatus->CurConfig;
+		pUSBBootStatus->ep0_state = EP0_STATE_INIT;
+		break;
+
+	case STANDARD_GET_DESCRIPTOR:
+		dprintf("STANDARD_GET_DESCRIPTOR :");
+		pUSBBootStatus->Remain_size =
+			(u32)pSetupPacket->wLength;
+		switch (pSetupPacket->wValue >> 8) {
+		case DESCRIPTORTYPE_DEVICE:
+			pUSBBootStatus->Current_ptr =
+				(u8*)pUSBBootStatus->DeviceDescriptor;
+			pUSBBootStatus->Current_Fifo_Size =
+				pUSBBootStatus->ctrl_max_pktsize;
+			if (pUSBBootStatus->Remain_size >
+					DEVICE_DESCRIPTOR_SIZE)
+				pUSBBootStatus->Remain_size =
+					DEVICE_DESCRIPTOR_SIZE;
+			pUSBBootStatus->ep0_state = EP0_STATE_GET_DSCPT;
 			break;
 
-		case STANDARD_SET_DESCRIPTOR:
-			dprintf("STANDARD_SET_DESCRIPTOR\r\n");
+		case DESCRIPTORTYPE_CONFIGURATION:
+			pUSBBootStatus->Current_ptr =
+				(u8*)pUSBBootStatus->ConfigDescriptor;
+			pUSBBootStatus->Current_Fifo_Size =
+				pUSBBootStatus->ctrl_max_pktsize;
+			if (pUSBBootStatus->Remain_size >
+					CONFIG_DESCRIPTOR_SIZE)
+				pUSBBootStatus->Remain_size =
+					CONFIG_DESCRIPTOR_SIZE;
+			pUSBBootStatus->ep0_state = EP0_STATE_GET_DSCPT;
 			break;
 
-		case STANDARD_SET_CONFIGURATION:
-			dprintf("STANDARD_SET_CONFIGURATION\r\n");
-			/* Configuration value in configuration descriptor */
-			pUSBBootStatus->CurConfig = pSetupPacket->wValue;
-			pUSBBootStatus->ep0_state = EP0_STATE_INIT;
-			break;
-
-		case STANDARD_GET_CONFIGURATION:
-			dprintf("STANDARD_GET_CONFIGURATION\r\n");
-			pUOReg->DCSR.DEPIR[CONTROL_EP].DIEPTSIZ = (1 << 19) |
-								(1 << 0);
-			/*ep0 enable, clear nak, next ep0, 8byte */
-			pUOReg->DCSR.DEPIR[CONTROL_EP].DIEPCTL =
-				EPEN_CNAK_EP0_8;
-			pUOReg->EPFifo[CONTROL_EP][0] =
-				pUSBBootStatus->CurConfig;
-			pUSBBootStatus->ep0_state = EP0_STATE_INIT;
-			break;
-
-		case STANDARD_GET_DESCRIPTOR:
-			dprintf("STANDARD_GET_DESCRIPTOR :");
-			pUSBBootStatus->Remain_size =
-				(U32)pSetupPacket->wLength;
-			switch (pSetupPacket->wValue >> 8) {
-			case DESCRIPTORTYPE_DEVICE:
-				pUSBBootStatus->Current_ptr =
-					(U8*)pUSBBootStatus->DeviceDescriptor;
-				pUSBBootStatus->Current_Fifo_Size =
-					pUSBBootStatus->ctrl_max_pktsize;
-				if (pUSBBootStatus->Remain_size >
-						DEVICE_DESCRIPTOR_SIZE)
-					pUSBBootStatus->Remain_size =
-						DEVICE_DESCRIPTOR_SIZE;
-				pUSBBootStatus->ep0_state = EP0_STATE_GET_DSCPT;
-				break;
-
-			case DESCRIPTORTYPE_CONFIGURATION:
-				pUSBBootStatus->Current_ptr =
-					(U8*)pUSBBootStatus->ConfigDescriptor;
-				pUSBBootStatus->Current_Fifo_Size =
-					pUSBBootStatus->ctrl_max_pktsize;
-				if (pUSBBootStatus->Remain_size >
-						CONFIG_DESCRIPTOR_SIZE)
-					pUSBBootStatus->Remain_size =
-						CONFIG_DESCRIPTOR_SIZE;
-				pUSBBootStatus->ep0_state = EP0_STATE_GET_DSCPT;
-				break;
-
-				//            case DESCRIPTORTYPE_STRING :
-				//            case DESCRIPTORTYPE_INTERFACE:
-				//            case DESCRIPTORTYPE_ENDPOINT:
-			default:
-				pUOReg->DCSR.DEPIR[0].DIEPCTL |= DEPCTL_STALL;
-				break;
-			}
-			break;
-
-		case STANDARD_CLEAR_FEATURE:
-			dprintf("STANDARD_CLEAR_FEATURE :");
-			break;
-
-		case STANDARD_SET_FEATURE:
-			dprintf("STANDARD_SET_FEATURE :");
-			break;
-
-		case STANDARD_GET_STATUS:
-			dprintf("STANDARD_GET_STATUS :");
-			pUSBBootStatus->ep0_state = EP0_STATE_GET_STATUS;
-			break;
-
-		case STANDARD_GET_INTERFACE:
-			dprintf("STANDARD_GET_INTERFACE\r\n");
-			pUSBBootStatus->ep0_state = EP0_STATE_GET_INTERFACE;
-			break;
-
-		case STANDARD_SET_INTERFACE:
-			dprintf("STANDARD_SET_INTERFACE\r\n");
-			pUSBBootStatus->CurInterface = pSetupPacket->wValue;
-			pUSBBootStatus->CurSetting = pSetupPacket->wValue;
-			pUSBBootStatus->ep0_state = EP0_STATE_INIT;
-			break;
-
-		case STANDARD_SYNCH_FRAME:
-			dprintf("STANDARD_SYNCH_FRAME\r\n");
-			pUSBBootStatus->ep0_state = EP0_STATE_INIT;
-			break;
-
+			//            case DESCRIPTORTYPE_STRING :
+			//            case DESCRIPTORTYPE_INTERFACE:
+			//            case DESCRIPTORTYPE_ENDPOINT:
 		default:
+			pUOReg->DCSR.DEPIR[0].DIEPCTL |= DEPCTL_STALL;
 			break;
 		}
+		break;
+
+	case STANDARD_CLEAR_FEATURE:
+		dprintf("STANDARD_CLEAR_FEATURE :");
+		break;
+
+	case STANDARD_SET_FEATURE:
+		dprintf("STANDARD_SET_FEATURE :");
+		break;
+
+	case STANDARD_GET_STATUS:
+		dprintf("STANDARD_GET_STATUS :");
+		pUSBBootStatus->ep0_state = EP0_STATE_GET_STATUS;
+		break;
+
+	case STANDARD_GET_INTERFACE:
+		dprintf("STANDARD_GET_INTERFACE\r\n");
+		pUSBBootStatus->ep0_state = EP0_STATE_GET_INTERFACE;
+		break;
+
+	case STANDARD_SET_INTERFACE:
+		dprintf("STANDARD_SET_INTERFACE\r\n");
+		pUSBBootStatus->CurInterface = pSetupPacket->wValue;
+		pUSBBootStatus->CurSetting = pSetupPacket->wValue;
+		pUSBBootStatus->ep0_state = EP0_STATE_INIT;
+		break;
+
+	case STANDARD_SYNCH_FRAME:
+		dprintf("STANDARD_SYNCH_FRAME\r\n");
+		pUSBBootStatus->ep0_state = EP0_STATE_INIT;
+		break;
+
+	default:
+		break;
 	}
+noep0:
 
 	pUOReg->DCSR.DEPIR[CONTROL_EP].DIEPTSIZ =
 		(1 << 19) | (pUSBBootStatus->ctrl_max_pktsize << 0);
@@ -414,14 +412,14 @@ static void nx_usb_transfer_ep0(USBBOOTSTATUS *pUSBBootStatus)
 
 static void nx_usb_int_bulkin(USBBOOTSTATUS *pUSBBootStatus)
 {
-	U8 *bulkin_buf;
-	U32 remain_cnt;
+	u8 *bulkin_buf;
+	u32 remain_cnt;
 
 	dprintf("Bulk In Function\r\n");
 
-	bulkin_buf = (U8*)pUSBBootStatus->up_ptr;
+	bulkin_buf = (u8*)pUSBBootStatus->up_ptr;
 	remain_cnt = pUSBBootStatus->up_size -
-			((U32)pUSBBootStatus->up_ptr -
+			((u32)pUSBBootStatus->up_ptr -
 			 pUSBBootStatus->up_addr);
 
 	if (remain_cnt > pUSBBootStatus->bulkin_max_pktsize) {
@@ -459,32 +457,32 @@ static void nx_usb_int_bulkin(USBBOOTSTATUS *pUSBBootStatus)
 
 static void nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus,
 		struct NX_SecondBootInfo * pTBI,
-		U32 fifo_cnt_byte)
+		u32 fifo_cnt_byte)
 {
-	U32 *pdwBuffer;
+	u32 *pdwBuffer;
 
 	if (CTRUE != pUSBBootStatus->bHeaderReceived) {
-		pdwBuffer = (U32 *)pTBI;
+		pdwBuffer = (u32 *)pTBI;
 		nx_usb_read_out_fifo(BULK_OUT_EP,
-			(U8 *)&pdwBuffer[pUSBBootStatus->iRxHeaderSize / 4],
+			(u8 *)&pdwBuffer[pUSBBootStatus->iRxHeaderSize / 4],
 			fifo_cnt_byte);
 
 		if ((fifo_cnt_byte & 3) == 0) {
 			pUSBBootStatus->iRxHeaderSize += fifo_cnt_byte;
 		} else {
-			printf("ERROR : Header Packet Size must be aligned in 32-bits.\r\n");
+			printf("ERROR : Header Packet Size must be 32-bit aligned.\r\n");
 			pUOReg->DCSR.DEPOR[BULK_OUT_EP].DOEPCTL |= DEPCTL_STALL;
 		}
 
 		if (512 <= pUSBBootStatus->iRxHeaderSize) {
 			if (pTBI->SIGNATURE == HEADER_ID) {	// "NSIH"
 				pUSBBootStatus->bHeaderReceived = CTRUE;
-				pUSBBootStatus->RxBuffAddr = (U8*)pTBI->LOADADDR;
+				pUSBBootStatus->RxBuffAddr = (u8*)pTBI->LOADADDR;
 				pUSBBootStatus->iRxSize = pTBI->LOADSIZE;
 				printf("USB Load Address = 0x%08X "
 					"Launch Address = 0x%08X, "
 					"size = %d bytes\r\n",
-						(S32)pUSBBootStatus->RxBuffAddr,
+						(s32)pUSBBootStatus->RxBuffAddr,
 						pTBI->LAUNCHADDR,
 						pUSBBootStatus->iRxSize);
 			} else {
@@ -497,9 +495,9 @@ static void nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus,
 		}
 	} else {
 		NX_ASSERT((pUSBBootStatus->iRxSize) > 0);
-		NX_ASSERT(0 == ((U32)pUSBBootStatus->RxBuffAddr & 3));
+		NX_ASSERT(0 == ((u32)pUSBBootStatus->RxBuffAddr & 3));
 		nx_usb_read_out_fifo(BULK_OUT_EP,
-				(U8 *)pUSBBootStatus->RxBuffAddr,
+				(u8 *)pUSBBootStatus->RxBuffAddr,
 				fifo_cnt_byte);
 
 #if (0)
@@ -530,7 +528,7 @@ static void nx_usb_int_bulkout(USBBOOTSTATUS * pUSBBootStatus,
 
 static void nx_usb_reset(USBBOOTSTATUS *pUSBBootStatus)
 {
-	U32 i;
+	u32 i;
 	/* set all out ep nak */
 	for (i = 0; i < 16; i++)
 		pUOReg->DCSR.DEPOR[i].DOEPCTL |= DEPCTL_SNAK;
@@ -558,13 +556,13 @@ static void nx_usb_reset(USBBOOTSTATUS *pUSBBootStatus)
 	pUOReg->DCSR.DCFG &= ~(0x7F << 4);
 }
 
-static S32 nx_usb_set_init(USBBOOTSTATUS *pUSBBootStatus)
+static s32 nx_usb_set_init(USBBOOTSTATUS *pUSBBootStatus)
 {
-	U32 status = pUOReg->DCSR.DSTS; /* System status read */
+	u32 status = pUOReg->DCSR.DSTS; /* System status read */
 	union {
-		U32 AID;
-		U16 SID[2];
-		U8 BID[4];
+		u32 AID;
+		u16 SID[2];
+		u8 BID[4];
 	} USBID;
 
 	pUSBBootStatus->bHeaderReceived = CFALSE;
@@ -626,7 +624,7 @@ static S32 nx_usb_set_init(USBBOOTSTATUS *pUSBBootStatus)
 	USBID.SID[0] = USBD_PID;
 #else
 
-	USBID.AID = ReadIO32(&pReg_ECID->ECID[3]);
+	USBID.AID = pReg_ECID->ECID[3];
 
 	if ((USBID.SID[0] == 0) || (USBID.SID[1] == 0)) {
 		USBID.SID[1] = USBD_VID;
@@ -638,10 +636,10 @@ static S32 nx_usb_set_init(USBBOOTSTATUS *pUSBBootStatus)
 #endif
 	//    SYSMSG("USBD VID = %04X, PID = %04X\r\n", g_USBD_VID, g_USBD_PID);
 
-	pUSBBootStatus->DeviceDescriptor[8]  = (U8)(USBID.BID[2]);  //  8 vendor ID LSB
-	pUSBBootStatus->DeviceDescriptor[9]  = (U8)(USBID.BID[3]);  //  9 vendor ID MSB
-	pUSBBootStatus->DeviceDescriptor[10] = (U8)(USBID.BID[0]);  // 10 product ID LSB    (second product)
-	pUSBBootStatus->DeviceDescriptor[11] = (U8)(USBID.BID[1]);  // 11 product ID MSB
+	pUSBBootStatus->DeviceDescriptor[8]  = (u8)(USBID.BID[2]);  //  8 vendor ID LSB
+	pUSBBootStatus->DeviceDescriptor[9]  = (u8)(USBID.BID[3]);  //  9 vendor ID MSB
+	pUSBBootStatus->DeviceDescriptor[10] = (u8)(USBID.BID[0]);  // 10 product ID LSB    (second product)
+	pUSBBootStatus->DeviceDescriptor[11] = (u8)(USBID.BID[1]);  // 11 product ID MSB
 
 	/* set_opmode */
 	pUOReg->GCSR.GINTMSK = INT_RESUME | INT_OUT_EP | INT_IN_EP |
@@ -671,8 +669,8 @@ static S32 nx_usb_set_init(USBBOOTSTATUS *pUSBBootStatus)
 static void nx_usb_pkt_receive(USBBOOTSTATUS *pUSBBootStatus,
 		struct NX_SecondBootInfo *pTBI)
 {
-	U32 rx_status;
-	U32 fifo_cnt_byte;
+	u32 rx_status;
+	u32 fifo_cnt_byte;
 
 	rx_status = pUOReg->GCSR.GRXSTSP;
 	/* CRC Check for Global Boot Status */
@@ -706,8 +704,8 @@ static void nx_usb_pkt_receive(USBBOOTSTATUS *pUSBBootStatus,
 
 static void nx_usb_transfer(USBBOOTSTATUS *pUSBBootStatus)
 {
-	U32 ep_int;
-	U32 ep_int_status;
+	u32 ep_int;
+	u32 ep_int_status;
 
 	ep_int = pUOReg->DCSR.DAINT;
 
@@ -757,8 +755,8 @@ static void nx_usb_transfer(USBBOOTSTATUS *pUSBBootStatus)
 static void nx_udc_int_hndlr(USBBOOTSTATUS *pUSBBootStatus,
 		struct NX_SecondBootInfo *pTBI)
 {
-	U32 int_status;
-	S32 tmp;
+	u32 int_status;
+	s32 tmp;
 
 	int_status = pUOReg->GCSR.GINTSTS; /* Core Interrupt Register */
 
@@ -806,19 +804,19 @@ static void nx_udc_int_hndlr(USBBOOTSTATUS *pUSBBootStatus,
 	}
 	pUOReg->GCSR.GINTSTS = int_status; /* Interrupt Clear */
 }
-void udelay(U32 utime)
+void udelay(u32 utime)
 {
-	register volatile U32 i;
+	register volatile u32 i;
 	for (; utime > 0; utime--)
 		for (i = 106; i > 0; i--);
 }
 
-CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
+cbool iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 {
 	USBBOOTSTATUS USBBootStatus;
 	USBBOOTSTATUS *pUSBBootStatus = &USBBootStatus;
-	ResetCon(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CTRUE);	// reset on
-	ResetCon(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CFALSE);	// reset negate
+	ResetCon(RI_USB20OTG_MODULE_i_nRST, CTRUE);	// reset on
+	ResetCon(RI_USB20OTG_MODULE_i_nRST, CFALSE);	// reset negate
 
 	/* CRC Check for variables */
 	g_TBI = pTBI;
@@ -840,7 +838,8 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 
 	/* usb core soft reset */
 	pUOReg->GCSR.GRSTCTL = CORE_SOFT_RESET;
-	while (!(pUOReg->GCSR.GRSTCTL & AHB_MASTER_IDLE));
+	while (!(pUOReg->GCSR.GRSTCTL & AHB_MASTER_IDLE))
+		;
 
 	/* init_core */
 	pUOReg->GCSR.GAHBCFG = PTXFE_HALF | NPTXFE_HALF | MODE_SLAVE |
@@ -867,7 +866,7 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 
 		/* usb init device */
 		/* [][1: full speed(30Mhz) 0:high speed]*/
-		pUOReg->DCSR.DCFG = 1<<18;// | pUSBBootStatus->speed<<0;
+		pUOReg->DCSR.DCFG = 1 << 18;// | pUSBBootStatus->speed<<0;
 		pUOReg->GCSR.GINTMSK = INT_RESUME | INT_OUT_EP | INT_IN_EP |
 					INT_ENUMDONE | INT_RESET | INT_SUSPEND |
 					INT_RX_FIFO_NOT_EMPTY;
@@ -891,13 +890,14 @@ CBOOL iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 	}
 	/* usb core soft reset */
 	pUOReg->GCSR.GRSTCTL = CORE_SOFT_RESET;
-	while (!(pUOReg->GCSR.GRSTCTL & AHB_MASTER_IDLE));
+	while (!(pUOReg->GCSR.GRSTCTL & AHB_MASTER_IDLE))
+		;
 
 	pReg_Tieoff->TIEOFFREG[13] &= ~(1 << 3);	//nUtmiResetSync = 0
 	pReg_Tieoff->TIEOFFREG[13] &= ~(1 << 2);	//nResetSync = 0
 	pReg_Tieoff->TIEOFFREG[13] |=   3 << 7;		//POR_ENB=1, POR=1
 
-	ResetCon(RESETINDEX_OF_USB20OTG_MODULE_i_nRST, CTRUE);  // reset on
+	ResetCon(RI_USB20OTG_MODULE_i_nRST, CTRUE);  // reset on
 
 	printf("\r\n\nusb image download is done!\r\n\n");
 
