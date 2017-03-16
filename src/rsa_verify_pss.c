@@ -51,7 +51,7 @@
 #define MD_HASH_SIZE			256
 #define MBEDTLS_MD_MAX_SIZE		(MD_HASH_SIZE/8)
 
-#define MAX_MEM_ALLOC_SIZE		0x1880
+#define MAX_MEM_ALLOC_SIZE		0x2000
 
 char mempool[MAX_MEM_ALLOC_SIZE];	/* currently 0x1840 */
 size_t memallocpool;
