@@ -6,7 +6,7 @@
  * and without warranty of any kind, either expressed or implied, including
  * but not limited to the implied warranties of merchantability and/or
  * fitness for a particular puporse.
- * 
+ *
  * Module	:
  * File		:
  * Description	:
@@ -1332,9 +1332,19 @@ static char *bootmsg [] = {
 extern void startup(void);
 struct nx_bootheader * getmyheader(void)
 {
-	return (struct nx_bootheader *)((u32)startup - 
+	return (struct nx_bootheader *)((u32)startup -
 			sizeof(struct nx_bootheader));
 }
+
+static void memcpy(char* src, char* dst, int size)
+{
+	while(size--)
+		*dst = *src;
+}
+
+#define BL2_SDRRAM_BASEADDR	0xFFFF0000
+#define BL2_VECTORSIZE		0x3C
+
 int plat_load_image(struct NX_SecondBootInfo *pTBS,
 		u32 slot, cbool dec)
 {
@@ -1358,6 +1368,8 @@ int plat_load_image(struct NX_SecondBootInfo *pTBS,
 		} else
 			return 1;
 	}
+
+	memcpy((char*)bh, (char*)BL2_SDRAM_BASEADDR, BL2_VECTORSIZE);
 
 	dprintf("load %s image:%d\r\n", bootmsg[slot], bh->tbbi.loadsize);
 	if (bh->tbbi.loadsize == 0)
