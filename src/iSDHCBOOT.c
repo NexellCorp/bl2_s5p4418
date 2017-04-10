@@ -1342,7 +1342,7 @@ static void memcpy(char* src, char* dst, int size)
 		*dst = *src;
 }
 
-#define BL2_SDRRAM_BASEADDR	0xFFFF0000
+#define BL2_SDRAM_BASEADDR	0xFFFF0000
 #define BL2_VECTORSIZE		0x3C
 
 int plat_load_image(struct NX_SecondBootInfo *pTBS,
