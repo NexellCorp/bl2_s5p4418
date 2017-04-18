@@ -6,7 +6,7 @@
  * and without warranty of any kind, either expressed or implied, including
  * but not limited to the implied warranties of merchantability and/or
  * fitness for a particular puporse.
- * 
+ *
  * Module	:
  * File		:
  * Description	:
@@ -17,6 +17,7 @@
 
 #include "iUSBBOOT.h"
 #include "nx_ecid.h"
+#include <nx_bootheader.h>
 
 #ifdef DEBUG
 #define dprintf(x, ...) printf(x, ...)
@@ -209,7 +210,7 @@ static void nx_usb_ep0_int_hndlr(USBBOOTSTATUS *pUSBBootStatus)
 	dprintf("Event EP0\r\n");
 
 	if (pUSBBootStatus->ep0_state != EP0_STATE_INIT)
-	       goto noep0;	
+	       goto noep0;
 
 	buf[0] = pUOReg->EPFifo[CONTROL_EP][0];
 	buf[1] = pUOReg->EPFifo[CONTROL_EP][0];
@@ -907,4 +908,45 @@ cbool iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 			pTBI->LOADADDR, pTBI->LAUNCHADDR, pTBI->LOADSIZE);
 
 	return CTRUE;
+}
+
+int secure_usbboot(struct nx_bootheader *pBH,
+			   struct NX_SecondBootInfo *pTDS,
+			   struct NX_SecondBootInfo *pTBS ,
+			   struct NX_SecondBootInfo *pTBNS)
+{
+	struct NX_SecondBootInfo *tds, *tbs, *tbns;
+	struct nx_bootheader *tbl2, *header;
+	char vector[0x3c];
+	int *download_addr;
+
+	/* step xx. boot loader level 2 */
+	tbl2 = (struct nx_bootheader *)pBH;
+	download_addr = (int*)(&tbl2->tbbi._reserved3);
+	tbl2 = (struct nx_bootheader *)download_addr[0];
+
+	/* step xx. armv7-dispatcher */
+	header = (struct nx_bootheader *)((unsigned int)tbl2
+		+ (unsigned int)tbl2->tbbi.loadsize + sizeof(struct nx_bootheader));
+	tds = (struct NX_SecondBootInfo *)header;
+	memcpy((void*)0xFFFF0000, (void*)header, 0x3C);		// Vector Size (0x3C)
+	memcpy((void*)header->tbbi.loadaddr , (void*)header
+		+ sizeof(struct nx_bootheader) , header->tbbi.loadsize);
+	pTDS->LOADADDR   = header->tbbi.loadaddr;
+	pTDS->LAUNCHADDR = header->tbbi.startaddr;
+
+	/* step xx. non-secure bootloader */
+	header = (struct nx_bootheader *)((unsigned int)tds
+		+ (unsigned int)header->tbbi.loadsize + sizeof(struct nx_bootheader));
+	tbns = (struct NX_SecondBootInfo *)header;
+	memcpy((void*)header->tbbi.loadaddr , (void*)header
+		+ sizeof(struct nx_bootheader), header->tbbi.loadsize);
+	pTBNS->LOADADDR   = header->tbbi.loadaddr;
+	pTBNS->LAUNCHADDR = header->tbbi.startaddr;
+
+	/* step xx. secure bootloader */
+	pTBS->LOADADDR = 0x0;
+	pTBS->LAUNCHADDR = 0x0;
+
+	return 1;
 }

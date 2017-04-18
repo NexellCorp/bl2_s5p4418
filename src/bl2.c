@@ -6,7 +6,7 @@
  * and without warranty of any kind, either expressed or implied, including
  * but not limited to the implied warranties of merchantability and/or
  * fitness for a particular puporse.
- * 
+ *
  * Module	:
  * File		:
  * Description	:
@@ -47,15 +47,10 @@ void BootMain(cbool isresume, struct nx_bootheader *pBH)
 	switch (pSBI->DBI.SPIBI.LoadDevice) {
 	default:
 #if defined(SUPPORT_USB_BOOT)
-	case BOOT_FROM_USB:
-		NOTICE("Loading dispatcher from usb...\r\n");
-		ret = iUSBBOOT(pTDS);	// for USB boot
-		if (!isresume) {
-			NOTICE("Loading Secure OS from usb...\r\n");
-			ret = iUSBBOOT(pTBS);	// for USB boot
-			NOTICE("Loading U-Boot from usb...\r\n");
-			ret = iUSBBOOT(pTBNS);	// for USB boot
-		}
+		ret = secure_usbboot((struct nx_bootheader *)pBH,
+			(struct NX_SecondBootInfo *)pTDS,
+			(struct NX_SecondBootInfo *)pTBS,
+			(struct NX_SecondBootInfo *)pTBNS);
 		break;
 #endif
 
