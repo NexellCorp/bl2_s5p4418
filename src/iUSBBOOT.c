@@ -910,6 +910,9 @@ cbool iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 	return CTRUE;
 }
 
+#define BL2_FIXED_SIZE			(35*1024)
+#define ARMV7_DISPATCHER_FIXED		(28*1024)
+
 int secure_usbboot(struct nx_bootheader *pBH,
 			   struct NX_SecondBootInfo *pTDS,
 			   struct NX_SecondBootInfo *pTBS ,
@@ -918,7 +921,7 @@ int secure_usbboot(struct nx_bootheader *pBH,
 	struct NX_SecondBootInfo *tds, *tbs, *tbns;
 	struct nx_bootheader *tbl2, *header;
 	char vector[0x3c];
-	int *download_addr;
+	int *download_addr, size;
 
 	/* step xx. boot loader level 2 */
 	tbl2 = (struct nx_bootheader *)pBH;
@@ -926,8 +929,13 @@ int secure_usbboot(struct nx_bootheader *pBH,
 	tbl2 = (struct nx_bootheader *)download_addr[0];
 
 	/* step xx. armv7-dispatcher */
+	size = (tbl2->tbbi.loadsize + sizeof(struct nx_bootheader));
+	if (size > BL2_FIXED_SIZE) {
+		ERROR("Size of BL2 exceeds the maximum size. (size: 0x%08X) \r\n", size);
+		return -1;
+	}
 	header = (struct nx_bootheader *)((unsigned int)tbl2
-		+ (unsigned int)tbl2->tbbi.loadsize + sizeof(struct nx_bootheader));
+		+ (unsigned int)(BL2_FIXED_SIZE));
 	tds = (struct NX_SecondBootInfo *)header;
 	memcpy((void*)0xFFFF0000, (void*)header, 0x3C);		// Vector Size (0x3C)
 	memcpy((void*)header->tbbi.loadaddr , (void*)header
@@ -936,8 +944,13 @@ int secure_usbboot(struct nx_bootheader *pBH,
 	pTDS->LAUNCHADDR = header->tbbi.startaddr;
 
 	/* step xx. non-secure bootloader */
-	header = (struct nx_bootheader *)((unsigned int)tds
-		+ (unsigned int)header->tbbi.loadsize + sizeof(struct nx_bootheader));
+	size = (header->tbbi.loadsize + sizeof(struct nx_bootheader));
+	if (size > ARMV7_DISPATCHER_FIXED) {
+		ERROR("Size of DS exceeds the maximum size. (Size: 0x%08X) \r\n", size);
+		return -1;
+	}
+	header = (struct nx_bootheader *)((unsigned int)header
+		+ (unsigned int)(ARMV7_DISPATCHER_FIXED));
 	tbns = (struct NX_SecondBootInfo *)header;
 	memcpy((void*)header->tbbi.loadaddr , (void*)header
 		+ sizeof(struct nx_bootheader), header->tbbi.loadsize);
