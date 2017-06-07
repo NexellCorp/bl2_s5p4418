@@ -1339,7 +1339,7 @@ struct nx_bootheader * getmyheader(void)
 static void memcpy(char* src, char* dst, int size)
 {
 	while(size--)
-		*dst = *src;
+		*dst++ = *src++;
 }
 
 #define BL2_SDRAM_BASEADDR	0xFFFF0000
@@ -1369,7 +1369,8 @@ int plat_load_image(struct NX_SecondBootInfo *pTBS,
 			return 1;
 	}
 
-	memcpy((char*)bh, (char*)BL2_SDRAM_BASEADDR, BL2_VECTORSIZE);
+	if (slot == SECURE_DISPATCHER)
+		memcpy((char*)bh, (char*)BL2_SDRAM_BASEADDR, BL2_VECTORSIZE);
 
 	dprintf("load %s image:%d\r\n", bootmsg[slot], bh->tbbi.loadsize);
 	if (bh->tbbi.loadsize == 0)
