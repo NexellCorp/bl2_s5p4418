@@ -6,7 +6,7 @@
  * and without warranty of any kind, either expressed or implied, including
  * but not limited to the implied warranties of merchantability and/or
  * fitness for a particular puporse.
- * 
+ *
  * Module	:
  * File		:
  * Description	:
@@ -17,6 +17,8 @@
 
 #include "iUSBBOOT.h"
 #include "nx_ecid.h"
+#include <bl2.h>
+#include <nx_bootheader.h>
 
 #ifdef DEBUG
 #define dprintf(x, ...) printf(x, ...)
@@ -209,7 +211,7 @@ static void nx_usb_ep0_int_hndlr(USBBOOTSTATUS *pUSBBootStatus)
 	dprintf("Event EP0\r\n");
 
 	if (pUSBBootStatus->ep0_state != EP0_STATE_INIT)
-	       goto noep0;	
+	       goto noep0;
 
 	buf[0] = pUOReg->EPFifo[CONTROL_EP][0];
 	buf[1] = pUOReg->EPFifo[CONTROL_EP][0];
@@ -908,3 +910,76 @@ cbool iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 
 	return CTRUE;
 }
+
+#define BL2_FIXED_SIZE			(35*1024)
+#define ARMV7_DISPATCHER_FIXED		(28*1024)
+
+static int load_usbdown(struct nx_bootheader *bh, struct NX_SecondBootInfo *nbh,
+			int slot, int encryped)
+{
+	struct nx_bootheader *hdr, *header;
+	int *down_addr, *image_addr;
+	int fixed_size, header_size = sizeof(struct nx_bootheader);
+
+	/* step xx. get the "fip-nonsecure-usb.bin" download address */
+	hdr = (struct nx_bootheader *)bh;
+	down_addr = (int*)(&hdr->tbbi._reserved3);
+	hdr = (struct nx_bootheader *)down_addr[0];
+
+	/* step xx. get the boot-loader fixed size */
+	if (slot == SECURE_DISPATCHER)
+		fixed_size = BL2_FIXED_SIZE;
+	else if (slot == NON_SECURE_BL)
+		fixed_size = (BL2_FIXED_SIZE + ARMV7_DISPATCHER_FIXED);
+	else
+		fixed_size = 0;
+
+	header = (struct nx_bootheader *)((unsigned int)hdr
+		+ (unsigned int)(fixed_size));
+
+	if (header->tbbi.signature != HEADER_ID) {
+		ERROR("Wrong Boot Sinature!! (0x%08X)\r\n", header->tbbi.signature);
+		return -1;
+	}
+
+	image_addr= ((char*)header + header_size);
+	memcpy((void*)header->tbbi.loadaddr, ((void*)image_addr),
+		header->tbbi.loadsize);
+
+	nbh->LOADADDR   = header->tbbi.loadaddr;
+	nbh->LAUNCHADDR = header->tbbi.startaddr;
+
+	encryped = encryped;
+
+#ifdef SECURE_ON
+	return readimage((u8 *)header, (u8 *)bh,
+			 (u8 *)header->tbbi.loadaddr);
+#else
+	return 0;
+#endif
+}
+
+int plat_load_usbdown(struct nx_bootheader *pBH,
+			   struct NX_SecondBootInfo *pTDS,
+			   struct NX_SecondBootInfo *pTBS ,
+			   struct NX_SecondBootInfo *pTBNS,
+			   int is_resume)
+{
+	int ret;
+
+	ret = load_usbdown(pBH, pTDS, SECURE_DISPATCHER, 1);
+	if ((ret != -1) && !is_resume) {
+		load_usbdown(pBH, pTBNS, NON_SECURE_BL, 1);
+	#if 0	// Secure OS
+		if (ret != -1) {
+			load_usbdown(pBH, pTBS, SECURE_OS, 1);
+		}
+	#else
+		pTBS->LOADADDR = 0;
+		pTBS->LAUNCHADDR = 0;
+	#endif
+	}
+
+	return 1;
+}
+

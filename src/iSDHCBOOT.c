@@ -1317,11 +1317,7 @@ cbool load_mmc(u32 portnum,
 
 	return result;
 }
-enum {
-	SECURE_DISPATCHER = 0,
-	NON_SECURE_BL = 1,
-	SECURE_OS = 2
-};
+
 #if (dprintf)
 static char *bootmsg [] = {
 	"secure dispatcher",

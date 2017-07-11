@@ -229,4 +229,11 @@ struct nx_bootheader {
 	struct nx_tbbinfo tbbi;
 	struct asymmetrickey rsa_public;
 };
+
+enum {
+	SECURE_DISPATCHER = 0,
+	NON_SECURE_BL = 1,
+	SECURE_OS = 2
+};
+
 #endif
