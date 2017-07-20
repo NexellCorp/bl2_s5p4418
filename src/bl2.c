@@ -50,7 +50,6 @@ void BootMain(cbool isresume, struct nx_bootheader *pBH)
 #endif
 	buildinfo();
 
-	pSBI->DBI.SPIBI.LoadDevice = BOOT_FROM_USB;
 	switch (pSBI->DBI.SPIBI.LoadDevice) {
 	default:
 #if defined(SUPPORT_USB_BOOT)
