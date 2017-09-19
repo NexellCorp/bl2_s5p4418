@@ -911,7 +911,7 @@ cbool iUSBBOOT(struct NX_SecondBootInfo *pTBI)
 	return CTRUE;
 }
 
-#define BL2_FIXED_SIZE			(35*1024)
+#define BL2_FIXED_SIZE			(50*1024)
 #define ARMV7_DISPATCHER_FIXED		(28*1024)
 
 static int load_usbdown(struct nx_bootheader *bh, struct NX_SecondBootInfo *nbh,
