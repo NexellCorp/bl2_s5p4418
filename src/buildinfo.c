@@ -19,11 +19,15 @@ cbool buildinfo(void)
 {
 	cbool ret = CTRUE;
 
+#ifdef QUICKBOOT
+	printf("BL2 %s/%s\r\n", __DATE__, __TIME__);
+#else
 	printf("\r\n"
 "------------------------------------------------------------\r\n"
 " BL2 by Nexell Co. - Built on %s %s\r\n"
 "------------------------------------------------------------\r\n"
 	, __DATE__, __TIME__);
+#endif
 
 	return ret;
 }

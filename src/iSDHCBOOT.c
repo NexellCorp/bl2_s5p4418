@@ -891,7 +891,11 @@ cbool NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // u32 option )
 	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, SDXC_CLKGENDIV))
 		return CFALSE;
 #else
+#ifdef QUICKBOOT
+	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, 100000000))
+#else
 	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, 25000000))
+#endif
 		return CFALSE;
 #endif
 	if (CFALSE == NX_SDMMC_SelectCard(pSDXCBootStatus))
@@ -1404,15 +1408,21 @@ int sdemmcboot(cbool isresume,
 	dprintf("dispatcher load %d\r\n", ret);
 	if (ret == 0 && !isresume) {
 		ret = plat_load_image(pTBNS, NON_SECURE_BL, CFALSE);
+#ifndef QUICKBOOT
 		dprintf("uboot load %d\r\n", ret);
 		if (ret == 0) {
 			int tmp = plat_load_image(pTBS, SECURE_OS, CTRUE);
 			dprintf("secure os %d\r\n", tmp);
 			tmp = tmp;
 		}
+#else
+		pTBS->LAUNCHADDR = 0;
+#endif
 	}
 
+#ifndef QUICKBOOT
 	deinit_mmc(hdr->tbbi.dbi[0].sdmmcbi.portnumber);
+#endif
 
 	return !ret;
 }

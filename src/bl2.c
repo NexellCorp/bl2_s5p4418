@@ -56,17 +56,21 @@ void BootMain(cbool isresume, struct nx_bootheader *pBH)
 
 #if defined(SUPPORT_SDMMC_BOOT)
 	case BOOT_FROM_SDMMC:
+#ifndef QUICKBOOT
 		NOTICE("Loading from sdmmc... %d\r\n", isresume);
+#endif
 		ret = sdemmcboot(isresume, pTDS, pTBS, pTBNS);
 		break;
 #endif
 	}
 
 	if (ret) {
+#ifndef QUICKBOOT
 		NOTICE(" Image Loading Done!\r\n");
 		NOTICE("Launch to 0x%08X\r\n", pTDS->LAUNCHADDR);
 		while (!DebugIsUartTxDone())
 			;
+#endif
 		if (isresume) {
 			pTBS->LAUNCHADDR = pBH->tbbi._reserved320;
 			pTBNS->LAUNCHADDR = pBH->tbbi._reserved321;
@@ -74,8 +78,10 @@ void BootMain(cbool isresume, struct nx_bootheader *pBH)
 			pBH->tbbi._reserved320 = pTBS->LAUNCHADDR;
 			pBH->tbbi._reserved321 = pTBNS->LAUNCHADDR;
 		}
+#ifndef QUICKBOOT
 		while (!DebugIsUartTxDone())
 			;
+#endif
 		launch(isresume, pTBS->LAUNCHADDR,
 				pTBNS->LAUNCHADDR,
 				pTDS->LAUNCHADDR);
