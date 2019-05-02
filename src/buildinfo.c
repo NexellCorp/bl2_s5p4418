@@ -24,7 +24,7 @@ cbool buildinfo(void)
 #else
 	printf("\r\n"
 "------------------------------------------------------------\r\n"
-" BL2 by Nexell Co. - Built on %s %s\r\n"
+" BL2 by Nexell Co. - Built on DDD %s %s\r\n"
 "------------------------------------------------------------\r\n"
 	, __DATE__, __TIME__);
 #endif

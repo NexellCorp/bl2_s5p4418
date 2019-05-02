@@ -60,6 +60,19 @@
 //  Set global variables
 //------------------------------------------------------------------------------
 
+// OTA A/B UPDATE
+/* see, partmap.txt */
+/* bootloader_a start address = 0x10200 */
+/* bootloader_b start address = 0x4D0200 */
+/* offset = addr of slot B  -  addr of slot A */
+/*        = 0x4D0200 - 0x10200 */
+/*        = 0x4C0000 */
+#define OTA_UPDATE_BL2_ADDR_OFFSET_A            (0)
+#define OTA_UPDATE_BL2_ADDR_OFFSET_B            (0x4C0000)
+#define OTA_AB_UPDATE_BL2_MSG_A                 (0xAAAAAAAA)
+#define OTA_AB_UPDATE_BL2_MSG_B                 (0xBBBBBBBB)
+
+
 #if defined(__SET_GLOBAL_VARIABLES)
 
 struct NX_SecondBootInfo *const pSBI =
