@@ -32,6 +32,9 @@ CFLAGS			:=
 SUPPORT_USB_BOOT	= y
 SUPPORT_SDMMC_BOOT	= y
 
+# OTA A/B update
+SUPPORT_OTA_AB_UPDATE   ?= y
+
 # Secure Boot
 SECURE_ON		?= 0
 SECURE			?= NO
@@ -140,4 +143,8 @@ endif
 
 ifeq ($(QUICKBOOT), 1)
 CFLAGS += -DQUICKBOOT
+endif
+
+ifeq ($(SUPPORT_OTA_AB_UPDATE), y)
+CFLAGS += -DOTA_AB_UPDATE
 endif

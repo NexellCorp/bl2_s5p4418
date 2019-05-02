@@ -60,6 +60,10 @@
 //  Set global variables
 //------------------------------------------------------------------------------
 
+#define OTA_UPDATE_BL2_ADDR_OFFSET_A 0
+#define OTA_UPDATE_BL2_ADDR_OFFSET_B 0x4A0000
+
+
 #if defined(__SET_GLOBAL_VARIABLES)
 
 struct NX_SecondBootInfo *const pSBI =

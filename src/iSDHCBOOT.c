@@ -1359,10 +1359,19 @@ int plat_load_image(struct NX_SecondBootInfo *pTBS,
 	struct nx_bootheader loaded_hdr;
 	bh = &loaded_hdr;
 
+        uint64_t slot_offset = OTA_UPDATE_BL2_ADDR_OFFSET_B;
+
+        /* if (hdr->tbbi.dbi[slot].sdmmcbi.boot_slot_ab) */
 	dprintf("load %s header\r\n", bootmsg[slot]);
+
+        printf("[debug][suker] hdr addr = 0x%x\r\n", hdr);
+        printf("[debug][suker] hdr->tbbi.boot_slot_ab addr = 0x%x\r\n", &(hdr->tbbi.boot_slot_ab));
+        printf("[debug][suker] hdr->tbbi.boot_slot_ab = 0x%x\r\n", hdr->tbbi.boot_slot_ab);
+        printf("[debug][suker] bh addr = 0x%x\r\n", bh);
+
 	load_mmc(hdr->tbbi.dbi[0].sdmmcbi.portnumber,
-		hdr->tbbi.dbi[slot].sdmmcbi.deviceaddr / BLOCK_LENGTH,
-		2, (void*)bh, key, dec);
+                (hdr->tbbi.dbi[slot].sdmmcbi.deviceaddr+slot_offset) / BLOCK_LENGTH,
+                2, (void*)bh, key, dec);
 
 	if (bh->tbbi.signature != HEADER_ID) {
 		printf("wrong boot Sinature(0x%08X)\r\n", bh->tbbi.signature);
@@ -1380,7 +1389,7 @@ int plat_load_image(struct NX_SecondBootInfo *pTBS,
 	if (bh->tbbi.loadsize == 0)
 		printf("load size is zero!! please check it out!\r\n");
 	load_mmc(hdr->tbbi.dbi[slot].sdmmcbi.portnumber,
-		hdr->tbbi.dbi[slot].sdmmcbi.deviceaddr / BLOCK_LENGTH + 2,
+                (hdr->tbbi.dbi[slot].sdmmcbi.deviceaddr+slot_offset) / BLOCK_LENGTH + 2,
 		(bh->tbbi.loadsize + BLOCK_LENGTH - 1) / BLOCK_LENGTH,
 		(void*)bh->tbbi.loadaddr, key, dec);
 
