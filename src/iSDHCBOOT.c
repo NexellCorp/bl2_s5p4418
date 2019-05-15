@@ -26,6 +26,10 @@
 #define dprintf(x, ...) {}
 #endif
 
+#ifdef QUICKBOOT
+cbool g_bIsMMCOpen = CFALSE;
+#endif
+
 void ResetCon(u32 devicenum, cbool en);
 void GPIOSetAltFunction(u32 AltFunc);
 u32 NX_CLKPWR_GetPLLFrequency(u32 PllNumber);
@@ -911,6 +915,9 @@ cbool NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // u32 option )
 		return CFALSE;
 
 	NX_SDMMC_SetBusWidth(pSDXCBootStatus, 4);
+#ifdef QUICKBOOT
+	g_bIsMMCOpen = CTRUE;
+#endif
 
 	return CTRUE;
 }
@@ -920,6 +927,9 @@ cbool NX_SDMMC_Close(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
 	//NX_SDMMC_SetClock(pSDXCBootStatus, CFALSE, SDXC_CLKGENDIV_400KHZ);
 	NX_SDMMC_SetClock(pSDXCBootStatus, CFALSE, 400000);
+#ifdef QUICKBOOT
+	g_bIsMMCOpen = CFALSE;
+#endif
 	return CTRUE;
 }
 
@@ -1292,9 +1302,14 @@ cbool load_mmc(u32 portnum,
 	volatile struct NX_SDMMC_RegisterSet * const pSDXCReg =
 		pgSDXCReg[pcardstatus->SDPort];
 
-	if (CTRUE != NX_SDMMC_Open(pcardstatus)) {
-		printf("cannot detect sdmmc\r\n");
-		return CFALSE;
+#ifdef QUICKBOOT
+	if ( g_bIsMMCOpen == CFALSE)
+#endif
+	{
+		if (CTRUE != NX_SDMMC_Open(pcardstatus)) {
+			printf("cannot detect sdmmc\r\n");
+			return CFALSE;
+		}
 	}
 
 	if (0 == (pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY)) {
