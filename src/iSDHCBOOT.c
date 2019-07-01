@@ -28,6 +28,9 @@
 
 #ifdef QUICKBOOT
 cbool g_bIsMMCOpen = CFALSE;
+#define CONFIG_S5P_SDMMC_CLOCK			200000000
+#else
+#define CONFIG_S5P_SDMMC_CLOCK			25000000
 #endif
 
 void ResetCon(u32 devicenum, cbool en);
@@ -776,7 +779,7 @@ cbool NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 	cbool ret;
 
 	clkInfo.nPllNum = NX_CLKSRC_SDMMC;
-	clkInfo.nFreqHz = 25000000;
+	clkInfo.nFreqHz = CONFIG_S5P_SDMMC_CLOCK;
 
 	ret = NX_SDMMC_GetClkParam(&clkInfo);
 	if (ret == CFALSE)
@@ -895,11 +898,7 @@ cbool NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // u32 option )
 	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, SDXC_CLKGENDIV))
 		return CFALSE;
 #else
-#ifdef QUICKBOOT
-	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, 100000000))
-#else
-	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, 25000000))
-#endif
+	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, CONFIG_S5P_SDMMC_CLOCK))
 		return CFALSE;
 #endif
 	if (CFALSE == NX_SDMMC_SelectCard(pSDXCBootStatus))
