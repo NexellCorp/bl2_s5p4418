@@ -27,7 +27,9 @@
 #endif
 
 #ifdef QUICKBOOT
-cbool g_bIsMMCOpen = CFALSE;
+#define CONFIG_S5P_SDMMC_CLOCK			100000000
+#else
+#define CONFIG_S5P_SDMMC_CLOCK			25000000
 #endif
 
 void ResetCon(u32 devicenum, cbool en);
@@ -776,7 +778,7 @@ cbool NX_SDMMC_Init(SDXCBOOTSTATUS *pSDXCBootStatus)
 	cbool ret;
 
 	clkInfo.nPllNum = NX_CLKSRC_SDMMC;
-	clkInfo.nFreqHz = 25000000;
+	clkInfo.nFreqHz = CONFIG_S5P_SDMMC_CLOCK;
 
 	ret = NX_SDMMC_GetClkParam(&clkInfo);
 	if (ret == CFALSE)
@@ -895,11 +897,7 @@ cbool NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // u32 option )
 	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, SDXC_CLKGENDIV))
 		return CFALSE;
 #else
-#ifdef QUICKBOOT
-	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, 100000000))
-#else
-	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, 25000000))
-#endif
+	if (CFALSE == NX_SDMMC_SetClock(pSDXCBootStatus, CTRUE, CONFIG_S5P_SDMMC_CLOCK))
 		return CFALSE;
 #endif
 	if (CFALSE == NX_SDMMC_SelectCard(pSDXCBootStatus))
@@ -915,9 +913,6 @@ cbool NX_SDMMC_Open(SDXCBOOTSTATUS *pSDXCBootStatus) // u32 option )
 		return CFALSE;
 
 	NX_SDMMC_SetBusWidth(pSDXCBootStatus, 4);
-#ifdef QUICKBOOT
-	g_bIsMMCOpen = CTRUE;
-#endif
 
 	return CTRUE;
 }
@@ -927,9 +922,7 @@ cbool NX_SDMMC_Close(SDXCBOOTSTATUS *pSDXCBootStatus)
 {
 	//NX_SDMMC_SetClock(pSDXCBootStatus, CFALSE, SDXC_CLKGENDIV_400KHZ);
 	NX_SDMMC_SetClock(pSDXCBootStatus, CFALSE, 400000);
-#ifdef QUICKBOOT
-	g_bIsMMCOpen = CFALSE;
-#endif
+
 	return CTRUE;
 }
 
@@ -1302,16 +1295,6 @@ cbool load_mmc(u32 portnum,
 	volatile struct NX_SDMMC_RegisterSet * const pSDXCReg =
 		pgSDXCReg[pcardstatus->SDPort];
 
-#ifdef QUICKBOOT
-	if ( g_bIsMMCOpen == CFALSE)
-#endif
-	{
-		if (CTRUE != NX_SDMMC_Open(pcardstatus)) {
-			printf("cannot detect sdmmc\r\n");
-			return CFALSE;
-		}
-	}
-
 	if (0 == (pSDXCReg->STATUS & NX_SDXC_STATUS_FIFOEMPTY)) {
 		dprintf("fifo reset!!!\r\n");
 		pSDXCReg->CTRL = NX_SDXC_CTRL_FIFORST;
@@ -1379,11 +1362,11 @@ int plat_load_image(struct NX_SecondBootInfo *pTBS,
 #ifdef OTA_AB_UPDATE
         if (hdr->tbbi.boot_slot_ab == OTA_AB_UPDATE_BL2_MSG_A) {
                 slot_offset = OTA_UPDATE_BL2_ADDR_OFFSET_A;
-                printf("[bl2] ========== Slot selct A ==========\r\n");
+                dprintf("[bl2] ========== Slot selct A ==========\r\n");
         }
         else {
                 slot_offset = OTA_UPDATE_BL2_ADDR_OFFSET_B;
-                printf("[bl2] ========== Slot selct B ==========\r\n");
+                dprintf("[bl2] ========== Slot selct B ==========\r\n");
         }
 #endif
 	dprintf("load %s header\r\n", bootmsg[slot]);
@@ -1429,8 +1412,14 @@ int sdemmcboot(cbool isresume,
 {
 	int ret;
 	struct nx_bootheader *hdr = (struct nx_bootheader *)getmyheader();
+	SDXCBOOTSTATUS *pcardstatus = &lcardstatus;
 
 	init_mmc(hdr->tbbi.dbi[0].sdmmcbi.portnumber);
+
+	if (CTRUE != NX_SDMMC_Open(pcardstatus)) {
+		printf("cannot detect sdmmc\r\n");
+		return CFALSE;
+	}
 
 	ret = plat_load_image(pTDS, SECURE_DISPATCHER, CTRUE);
 	dprintf("dispatcher load %d\r\n", ret);
