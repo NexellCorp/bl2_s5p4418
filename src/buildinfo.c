@@ -20,7 +20,7 @@ cbool buildinfo(void)
 	cbool ret = CTRUE;
 
 #ifdef QUICKBOOT
-	printf("BL2 %s/%s\r\n", __DATE__, __TIME__);
+	printf("BL2\r\n");
 #else
 	printf("\r\n"
 "------------------------------------------------------------\r\n"
