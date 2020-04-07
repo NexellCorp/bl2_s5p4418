@@ -50,16 +50,16 @@ SYS_OBJS_LIST	=	$(addprefix $(DIR_OBJOUTPUT)/,$(SYS_OBJS))
 SYS_INCLUDES	=	-I src
 
 ################################################################################
-$(DIR_OBJOUTPUT)/%.o: src/%.c
+$(DIR_OBJOUTPUT)/%.o: src/%.c mkobjdir
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(CFLAGS) $(SYS_INCLUDES)
 ################################################################################
-$(DIR_OBJOUTPUT)/%.o: src/%.S
+$(DIR_OBJOUTPUT)/%.o: src/%.S mkobjdir
 	@echo [compile....$<]
 	$(Q)$(CC) -MMD $< -c -o $@ $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
 ################################################################################
 
-all: mkobjdir startup $(SYS_OBJS_LIST) link bin
+all: mkobjdir $(SYS_OBJS_LIST) link bin
 
 mkobjdir:
 ifeq ($(OS),Windows_NT)
@@ -75,10 +75,6 @@ else
 		$(MKDIR) $(DIR_TARGETOUTPUT);		\
 	fi;
 endif
-
-startup:
-	@echo [compile....startup.S first !!!]
-	$(Q)$(CC) -MMD src/startup.S -c -o $(DIR_OBJOUTPUT)/startup.o $(ASFLAG) $(CFLAGS) $(SYS_INCLUDES)
 
 link: $(SYS_OBJS_LIST)
 	@echo [link.... $(DIR_TARGETOUTPUT)/$(TARGET_NAME).elf]
