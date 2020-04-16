@@ -73,6 +73,104 @@ int memcmp(const void* s1, const void* s2, size_t n)
 	return 0;
 }
 
+unsigned int getquotient(unsigned int dividend, unsigned int divisor)
+{
+	unsigned int quotient, remainder;
+	unsigned int t, num_bits;
+	unsigned int q, bit, d = 0;
+	unsigned int i;
+
+	remainder = 0;
+	quotient = 0;
+
+	if (divisor == 0)
+		return -1;
+
+	if (divisor > dividend) {
+		return 0;
+	}
+
+	if (divisor == dividend) {
+		return 1;
+	}
+
+	num_bits = 32;
+
+	while (remainder < divisor) {
+		bit = (dividend & 0x80000000) >> 31;
+		remainder = (remainder << 1) | bit;
+		d = dividend;
+		dividend = dividend << 1;
+		num_bits--;
+	}
+
+	dividend = d;
+	remainder = remainder >> 1;
+	num_bits++;
+
+	for (i = 0; i < num_bits; i++) {
+		bit = (dividend & 0x80000000) >> 31;
+		remainder = (remainder << 1) | bit;
+		t = remainder - divisor;
+		q = !((t & 0x80000000) >> 31);
+		dividend = dividend << 1;
+		quotient = (quotient << 1) | q;
+		if (q) {
+			remainder = t;
+		}
+	}
+	return quotient;
+}
+
+unsigned int getremainder(unsigned int dividend, unsigned int divisor)
+{
+	unsigned int quotient, remainder;
+	unsigned int t, num_bits;
+	unsigned int q, bit, d = 0;
+	unsigned int i;
+
+	remainder = 0;
+	quotient = 0;
+
+	if (divisor == 0)
+		return -1;
+
+	if (divisor > dividend) {
+		return dividend;
+	}
+
+	if (divisor == dividend) {
+		return 0;
+	}
+
+	num_bits = 32;
+
+	while (remainder < divisor) {
+		bit = (dividend & 0x80000000) >> 31;
+		remainder = (remainder << 1) | bit;
+		d = dividend;
+		dividend = dividend << 1;
+		num_bits--;
+	}
+
+	dividend = d;
+	remainder = remainder >> 1;
+	num_bits++;
+
+	for (i = 0; i < num_bits; i++) {
+		bit = (dividend & 0x80000000) >> 31;
+		remainder = (remainder << 1) | bit;
+		t = remainder - divisor;
+		q = !((t & 0x80000000) >> 31);
+		dividend = dividend << 1;
+		quotient = (quotient << 1) | q;
+		if (q) {
+			remainder = t;
+		}
+	}
+	return remainder;
+}
+
 void __div0(void)
 {
 	printf("divide by zero, halt!\r\n");
